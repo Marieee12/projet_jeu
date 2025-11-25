@@ -6,3 +6,8 @@
       height: 100vh; 
       font-family: sans-serif;
     }
+
+    #gameCanvas {
+  border: 2px solid #444;
+  background: #000;
+}
