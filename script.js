@@ -12,6 +12,11 @@ const timeDisplay = document.getElementById('time-display');
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// Modal références
+const rulesModal = document.getElementById('rules-modal');
+const closeModalButton = document.getElementById('close-rules-modal');
+const startFromModalButton = document.getElementById('start-from-modal');
+
 // --- VARIABLES DE JEU ---
 let selectedColor = 'red'; 
 let gameScore = 0;
@@ -71,26 +76,59 @@ if (pauseButton) {
     });
 }
 
-/** Bouton règles */
+/** Bouton règles - Ouvre le modal */
 if (rulesButton) {
     rulesButton.addEventListener('click', () => {
-        alert(' RÈGLES DU JEU\n\n' +
-              'Objectif: Éclater toutes les bulles!\n\n' +
-              'Match-3: Connectez 3 bulles ou plus de la même couleur\n\n' +
-              'Les balles rebondissent sur les murs\n\n' +
-              'Score: 10 points par explosion, bonus pour les cascades!');
+        rulesModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Empêche le scroll
     });
 }
+
+/** Fermer le modal */
+if (closeModalButton) {
+    closeModalButton.addEventListener('click', closeRulesModal);
+}
+
+/** Fermer le modal en cliquant sur l'overlay */
+if (rulesModal) {
+    const overlay = rulesModal.querySelector('.modal-overlay');
+    if (overlay) {
+        overlay.addEventListener('click', closeRulesModal);
+    }
+}
+
+/** Fonction pour fermer le modal */
+function closeRulesModal() {
+    rulesModal.classList.add('hidden');
+    document.body.style.overflow = 'auto'; // Réactive le scroll
+}
+
+/** Démarrer le jeu depuis le modal */
+if (startFromModalButton) {
+    startFromModalButton.addEventListener('click', () => {
+        closeRulesModal();
+        landingPage.classList.add('hidden');
+        gameScreen.classList.remove('hidden');
+        initializeGame();
+    });
+}
+
+/** Fermer le modal avec la touche Echap */
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !rulesModal.classList.contains('hidden')) {
+        closeRulesModal();
+    }
+});
 
 
 // --- CHOIX DE COULEUR PAR L'UTILISATEUR ---
 
 colorButtons.forEach(button => {
     button.addEventListener('click', () => {
-        // 1. Mettre à jour la couleur sélectionnée
+        // Mettre à jour la couleur sélectionnée
         selectedColor = button.getAttribute('data-color');
         
-        // 2. Mettre à jour le feedback visuel (bordure or pour la couleur sélectionnée)
+        // Mettre à jour le feedback visuel (bordure or pour la couleur sélectionnée)
         colorButtons.forEach(btn => btn.classList.remove('selected'));
         button.classList.add('selected');
     });
@@ -112,9 +150,6 @@ function initializeGame() {
         updateTimeDisplay();
     }, 1000);
     
-    // TODO: 1. Initialiser la grille de bulles (bubblesGrid) avec des couleurs aléatoires.
-    // TODO: 2. Positionner le canon.
-    
     gameIsRunning = true;
     gameLoop();
 }
@@ -134,19 +169,11 @@ function updateTimeDisplay() {
 /** Logique de mise à jour (mouvement, collisions, match-3). */
 function update() {
     if (!gameIsRunning) return;
-
-    // TODO: 3. Gérer le mouvement de currentShotBubble (si elle est en vol).
-    // TODO: 4. Vérifier les collisions avec les murs et la grille.
-    // TODO: 5. Si collision, placer la bulle, vérifier Match-3 et gérer les chutes.
 }
 
 /** Dessine tous les éléments sur le Canvas. */
 function draw() {
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-    // TODO: 6. Dessiner la grille de bulles (bubblesGrid).
-    // TODO: 7. Dessiner le canon et l'indicateur de visée.
-    // TODO: 8. Dessiner la bulle en cours de tir (currentShotBubble) si elle est non-null.
 }
 
 /** La boucle principale du jeu. */
@@ -173,8 +200,8 @@ function calculateAngle(mouseX, mouseY) {
     let angle = Math.atan2(dy, dx);
     
     // Limiter l'angle pour ne pas tirer vers le bas (entre -165° et -15°)
-    const minAngle = Math.PI + 0.3; // environ 165 degrés
-    const maxAngle = -0.3;          // environ -15 degrés
+    const minAngle = Math.PI + 0.3; // 165 degrés
+    const maxAngle = -0.3;          // -15 degrés
     
     // Inverser l'angle pour travailler dans le repère du Canvas (angle par rapport à l'horizontale positive)
     // Mais pour le tir, nous nous intéressons seulement à l'orientation du canon.
@@ -196,7 +223,7 @@ canvas.addEventListener('click', (e) => {
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
     
-    // On ne tire que dans la zone supérieure (pour éviter de cliquer sur la palette)
+    // On ne tire que dans la zone supérieure pour ne pas cliquer sur la palette
     if (mouseY > CANVAS_HEIGHT - 50) return; 
 
     const angle = calculateAngle(mouseX, mouseY);
@@ -221,5 +248,5 @@ function shootBubble(angle) {
 }
 
 
-// --- DÉMARRAGE SIMULÉ (après le loader) ---
+// --- DÉMARRAGE (après le loader) ---
 setTimeout(hideLoader, 2000);

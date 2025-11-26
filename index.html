@@ -31,7 +31,7 @@
         
         <!-- Gauche CLASSEMENT SIMULÉ -->
         <div id="leaderboard" class="panel panel-left slide-in-left">
-            <h2>🏆 CLASSEMENT</h2>
+            <h2>CLASSEMENT</h2>
             <table>
                 <thead>
                     <tr><th>Rang</th><th>Pseudo</th><th>Score</th></tr>
@@ -56,7 +56,7 @@
                     <span class="btn-icon">▶</span> JOUER
                 </button>
                 <button id="rules-button" class="btn-secondary">
-                    <span class="btn-icon">📋</span> RÈGLES DU JEU
+                    <span class="btn-icon"></span> RÈGLES DU JEU
                 </button>
             </div>
         </div>
@@ -117,6 +117,60 @@
                 <button class="color-select" data-color="green" style="background-color: #4dff4d;" title="Vert"></button>
                 <button class="color-select" data-color="yellow" style="background-color: #ffff4d;" title="Jaune"></button>
             </div>
+        </div>
+    </div>
+
+    <!-- POPUP RÈGLES -->
+    <div id="rules-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="close-rules-modal">✕</button>
+            <h2 class="modal-title">RÈGLES DU JEU</h2>
+            
+            <div class="rules-section">
+                <div class="rule-item">
+                    <div class="rule-icon">🎯</div>
+                    <div class="rule-text">
+                        <h3>Objectif</h3>
+                        <p>Éclater toutes les bulles du plateau pour gagner !</p>
+                    </div>
+                </div>
+
+                <div class="rule-item">
+                    <div class="rule-icon">🎨</div>
+                    <div class="rule-text">
+                        <h3>Match-3</h3>
+                        <p>Connectez 3 bulles ou plus de la même couleur pour les faire exploser</p>
+                        <div class="rule-demo">
+                            <span class="demo-bubble" style="background: #ff4d4d;"></span>
+                            <span class="demo-bubble" style="background: #ff4d4d;"></span>
+                            <span class="demo-bubble" style="background: #ff4d4d;"></span>
+                            <span class="demo-text">Boom!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rule-item">
+                    <div class="rule-icon">↩️</div>
+                    <div class="rule-text">
+                        <h3>Rebonds</h3>
+                        <p>Les bulles rebondissent sur les murs latéraux pour atteindre les zones difficiles</p>
+                    </div>
+                </div>
+
+                <div class="rule-item">
+                    <div class="rule-icon">💰</div>
+                    <div class="rule-text">
+                        <h3>Points</h3>
+                        <p><strong>10 points</strong> pour une explosion standard</p>
+                        <p><strong>Bonus</strong> pour les bulles qui tombent en cascade !</p>
+                    </div>
+                </div>
+            </div>
+
+            <button class="modal-button" id="start-from-modal">
+                <span class="btn-icon">▶</span> Commencer à jouer
+            </button>
         </div>
     </div>
 
