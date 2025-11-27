@@ -7,7 +7,7 @@ export class Game {
 
     // Options
     this.radius = options.radius || 20;
-    this.colors = options.colors || ["#f97316", "#22c55e", "#3b82f6", "#facc15"];
+    this.colors = options.colors || ["#ff4d4d", "#4d94ff", "#4dff4d", "#ffff4d"];
 
     this.spacingX = this.radius * 2;            // écart horizontal = diamètre
     this.spacingY = this.radius * Math.sqrt(3); // écart vertical type hexagone

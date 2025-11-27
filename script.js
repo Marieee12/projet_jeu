@@ -156,7 +156,6 @@ function initializeGame() {
     // instanciation de ton moteur de jeu
     game = new Game(canvas, ctx, {
         radius: 20,
-        colors: ["red", "blue", "green", "yellow"]
     });
 
     gameIsRunning = true;
