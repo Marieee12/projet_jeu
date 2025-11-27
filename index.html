@@ -6,6 +6,7 @@
     <title>Projet JS Bubble Shooter</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-… (vérifier sur CDNJS) …" crossorigin="anonymous"referrerpolicy="no-referrer"/>
 </head>
 <body>
 
@@ -31,7 +32,7 @@
         
         <!-- Gauche CLASSEMENT SIMULÉ -->
         <div id="leaderboard" class="panel panel-left slide-in-left">
-            <h2>CLASSEMENT</h2>
+            <h2><i class="fa-solid fa-ranking-star"></i>CLASSEMENT</h2>
             <table>
                 <thead>
                     <tr><th>Rang</th><th>Pseudo</th><th>Score</th></tr>
@@ -56,7 +57,7 @@
                     <span class="btn-icon">▶</span> JOUER
                 </button>
                 <button id="rules-button" class="btn-secondary">
-                    <span class="btn-icon"></span> RÈGLES DU JEU
+                    <span class="btn-icon"><i class="fa-solid fa-list"></i></span> RÈGLES DU JEU
                 </button>
             </div>
         </div>
@@ -97,7 +98,7 @@
                 </div>
                 <div class="info-item">
                     <button id="pause-button" class="icon-button">⏸️</button>
-                    <button id="back-to-menu" class="icon-button">🏠</button>
+                    <button id="back-to-menu" class="icon-button"><i class="fa-solid fa-house" style="color: #ffffff;"></i></button>
                 </div>
             </div>
         </div>
@@ -129,7 +130,7 @@
             
             <div class="rules-section">
                 <div class="rule-item">
-                    <div class="rule-icon">🎯</div>
+                    <div class="rule-icon"><i class="fa-solid fa-bullseye fa-bounce" style="color: #ffffff;"></i></div>
                     <div class="rule-text">
                         <h3>Objectif</h3>
                         <p>Éclater toutes les bulles du plateau pour gagner !</p>
@@ -137,7 +138,7 @@
                 </div>
 
                 <div class="rule-item">
-                    <div class="rule-icon">🎨</div>
+                    <div class="rule-icon"><i class="fa-regular fa-circle-check fa-bounce" style="color: #ffffff;"></i></div>
                     <div class="rule-text">
                         <h3>Match-3</h3>
                         <p>Connectez 3 bulles ou plus de la même couleur pour les faire exploser</p>
@@ -151,7 +152,7 @@
                 </div>
 
                 <div class="rule-item">
-                    <div class="rule-icon">↩️</div>
+                    <div class="rule-icon"><i class="fa-solid fa-rotate-left fa-bounce" style="color: #ffffff;"></i></div>
                     <div class="rule-text">
                         <h3>Rebonds</h3>
                         <p>Les bulles rebondissent sur les murs latéraux pour atteindre les zones difficiles</p>
@@ -159,7 +160,7 @@
                 </div>
 
                 <div class="rule-item">
-                    <div class="rule-icon">💰</div>
+                    <div class="rule-icon"><i class="fa-solid fa-coins fa-bounce" style="color: #ffffff;"></i></div>
                     <div class="rule-text">
                         <h3>Points</h3>
                         <p><strong>10 points</strong> pour une explosion standard</p>
