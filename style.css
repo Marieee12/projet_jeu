@@ -2,58 +2,63 @@
 
 /* --- COULEURS ET POLICES --- */
 :root {
-    --color-background: #1a1a2e;     
-    --color-secondary: #16213e;   
-    --color-panel: #0f3460;         
-    --color-text-light: #ffffff;
-    --color-text-dark: #333;
-    --color-accent: #e94560;     
-    --color-accent-light: #ff6b81;
-    --color-success: #2ecc71;     
-    --canvas-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  --color-background: #1a1a2e;     
+  --color-secondary: #16213e;   
+  --color-panel: #0f3460;         
+  --color-text-light: #ffffff;
+  --color-text-dark: #333;
+  --color-accent: #e94560;     
+  --color-accent-light: #ff6b81;
+  --color-success: #2ecc71;     
+  --canvas-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: var(--color-text-dark);
-    overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: var(--color-text-dark);
+  /* overflow: hidden; */
+}
+
+#gameCanvas {
+    border: 2px solid #444;
+    background: #000;
 }
 
 /* Gestion des Écrans (Loader, Landing, Game) */
 .screen {
-    width: 100%;
-    max-width: 1200px; 
-    height: 700px;   
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    border-radius: 20px; 
-    box-sizing: border-box;
-    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    animation: fadeIn 0.5s ease-in;
+  width: 100%;
+  max-width: 1200px; 
+  height: 700px;   
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px; 
+  box-sizing: border-box;
+  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  animation: fadeIn 0.5s ease-in;
 }
 
 .hidden {
-    display: none !important;
+  display: none !important;
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
+  from {
+    opacity: 0;
         transform: scale(0.95);
     }
     to {
@@ -552,11 +557,11 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-#gameCanvas {
+/* #gameCanvas {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     display: block;
     border-radius: 0;
-}
+} */
 
 #aim-indicator {
     position: absolute;

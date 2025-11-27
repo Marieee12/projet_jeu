@@ -1,3 +1,5 @@
+import { Game } from "./game.js";
+
 // --- RÉFÉRENCES DOM ---
 const loaderScreen = document.getElementById('loader-screen');
 const landingPage = document.getElementById('landing-page');
@@ -18,6 +20,7 @@ const closeModalButton = document.getElementById('close-rules-modal');
 const startFromModalButton = document.getElementById('start-from-modal');
 
 // --- VARIABLES DE JEU ---
+let game = null;
 let selectedColor = 'red'; 
 let gameScore = 0;
 let gameTime = 0;
@@ -149,7 +152,13 @@ function initializeGame() {
         gameTime++;
         updateTimeDisplay();
     }, 1000);
-    
+
+    // instanciation de ton moteur de jeu
+    game = new Game(canvas, ctx, {
+        radius: 20,
+        colors: ["red", "blue", "green", "yellow"]
+    });
+
     gameIsRunning = true;
     gameLoop();
 }
@@ -168,12 +177,21 @@ function updateTimeDisplay() {
 
 /** Logique de mise à jour (mouvement, collisions, match-3). */
 function update() {
-    if (!gameIsRunning) return;
+    if (!gameIsRunning || !game) return;
+
+    const removed = game.update();
+    if (removed > 0) {
+        gameScore += removed * 10;
+        updateScoreDisplay();
+    }
 }
 
 /** Dessine tous les éléments sur le Canvas. */
 function draw() {
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    if (game) {
+        game.draw();
+    }
 }
 
 /** La boucle principale du jeu. */
@@ -217,7 +235,7 @@ function calculateAngle(mouseX, mouseY) {
 
 /** Déclenche le tir lors du clic sur le Canvas. */
 canvas.addEventListener('click', (e) => {
-    if (!gameIsRunning || currentShotBubble) return;
+    if (!gameIsRunning || !game) return;
 
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
@@ -227,7 +245,9 @@ canvas.addEventListener('click', (e) => {
     if (mouseY > CANVAS_HEIGHT - 50) return; 
 
     const angle = calculateAngle(mouseX, mouseY);
-    shootBubble(angle);
+
+    // utilisation de ton moteur de jeu
+    game.shoot(angle, selectedColor);
 });
 
 /** Crée et lance la bulle. */
