@@ -37,10 +37,14 @@ class Game {
     this.canvas = canvas;
     this.ctx = ctx;
 
+    // Position de la bulle au départ
+    this.startX = this.canvas.width / 2; // au milieu
+    this.startY = this.canvas.height - 60; // en bas
+
     // Une seule bulle "chargée" au centre en bas
     this.bubble = new Bubble(
-      this.canvas.width / 2,
-      this.canvas.height - 60,
+      this.startX,
+      this.startY,
       20,
       "#f97316",
       0 // immobile jusqu'au tir
@@ -56,9 +60,15 @@ class Game {
 
       // Si elle sort du haut de l'écran : suppression pour l'instant
       if (this.bubble.y + this.bubble.radius < 0) {
-        this.bubble = null;
+        this.resetBubble();
       }
     }
+  }
+
+   resetBubble() {
+    this.bubble.x = this.startX;
+    this.bubble.y = this.startY;
+    this.bubble.vy = 0;
   }
 
   drawBackground() {
@@ -87,7 +97,6 @@ class Game {
 
   // Tir de la bulle
   shoot() {
-    if (this.hasShot) return;
     if (!this.bubble) return;
 
     // La bulle démarre vers le haut
