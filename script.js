@@ -72,7 +72,7 @@ if (backToMenuButton) {
 if (pauseButton) {
     pauseButton.addEventListener('click', () => {
         gameIsRunning = !gameIsRunning;
-        pauseButton.textContent = gameIsRunning ? '⏸️' : '▶️';
+        pauseButton.innerHTML = gameIsRunning ? '<i class="fa-solid fa-pause" style="color: #ffffff;"></i>' : '<i class="fa-solid fa-play" style="color: #ffffff;"></i>';
         if (gameIsRunning) {
             gameLoop();
         }
