@@ -29,7 +29,7 @@ body {
   font-family: 'Poppins', sans-serif;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: var(--color-text-dark);
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 
 #gameCanvas {
@@ -557,11 +557,11 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-#gameCanvas {
+/* #gameCanvas {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     display: block;
     border-radius: 0;
-}
+} */
 
 #aim-indicator {
     position: absolute;
