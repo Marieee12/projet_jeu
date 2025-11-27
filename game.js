@@ -347,7 +347,11 @@ export class Game {
   }
 
   drawBackground() {
-    this.ctx.fillStyle = "#020617";
+    const gradient = this.ctx.createLinearGradient(0, 0, this.canvas.width, this.canvas.height);
+    gradient.addColorStop(0, '#667eea');
+    gradient.addColorStop(1, '#764ba2');
+    this.ctx.fillStyle = gradient;
+
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 

@@ -33,7 +33,9 @@ body {
 }
 
 #gameCanvas {
-    border: 2px solid #444;
+    border: 2px solid;
+    border-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-image-slice: 1;
     background: #000;
 }
 
