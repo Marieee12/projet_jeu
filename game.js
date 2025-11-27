@@ -6,14 +6,12 @@ export class Game {
     this.canvas = canvas;
     this.ctx = ctx;
 
-    // Paramètres bulles
+    // Options
     this.radius = options.radius || 20;
+    this.colors =
+      options.colors || ["#ff4d4d", "#4d94ff", "#4dff4d", "#ffff4d"]; 
     this.spacingX = this.radius * 2;            // écart horizontal = diamètre
     this.spacingY = this.radius * Math.sqrt(3); // écart vertical type hexagone
-
-    // Palette de couleurs (tu peux adapter)
-    this.colors =
-      options.colors || ["#f97316", "#22c55e", "#3b82f6"]; // orange, vert, bleu
 
     // Grille logique
     this.rows = 10; // nombre total de lignes dans la grille
@@ -22,7 +20,7 @@ export class Game {
 
     // grid[row][col] = Bubble | null
     this.grid = [];
-    this.initGrid(7); // par ex : 7 premières lignes remplies
+    this.initGrid(7); 
 
     // Bulle tirée (position provisoire, on recale après)
     this.startX = this.canvas.width / 2;
@@ -99,7 +97,7 @@ export class Game {
       return;
     }
 
-    // 2) On choisit une "ligne cible" sous le cluster (logique de visée)
+    // 2) On choisit la ligne cible
     const targetRow = Math.min(bottomRow + 1, this.rows - 1);
 
     // 3) Choisir la colonne dont le centre est le plus proche du centre de l'écran
@@ -116,7 +114,7 @@ export class Game {
       }
     }
 
-    // 4) Positionner le départ sur le centre de cette "colonne logique"
+    // 4) Positionner le départ sur le centre de cette colonne
     const center = this.getCellCenter(targetRow, bestCol);
     this.startX = center.x;
 
@@ -179,7 +177,7 @@ export class Game {
     return null;
   }
 
-  // Les voisins "hexagonaux" (6) d'une case (row, col)
+  // Les voisins (6) d'une case (row, col)
   getNeighbors(row, col) {
     const neighbors = [];
     const isOdd = row % 2 === 1;
@@ -258,7 +256,7 @@ export class Game {
 
   // Place la bulle dans la case de grille la plus proche autour
   // de la bulle touchée ou sur le plafond
-  // ⚠️ maintenant, on retourne le nombre de bulles supprimées
+  // on retourne le nombre de bulles supprimées
   attachBubbleToGrid(collision) {
     if (!this.bubble) return 0;
 
@@ -366,7 +364,7 @@ export class Game {
       }
     }
 
-    return removed; // ⚠️ très important pour le score
+    return removed; // important pour le score
   }
 
   resetBubble() {
@@ -398,12 +396,12 @@ export class Game {
   }
 
   // Tir de la bulle
-  // ⚠️ signature attendue par le script : shoot(angle, color)
+  // signature attendue: shoot(angle, color)
   shoot(angle, color) {
     if (!this.bubble) return;
     if (this.bubble.vy !== 0) return; // on ne tire que si elle est immobile
 
-    // On ignore encore l'angle pour l'instant : tir vertical
+    // angle ignoré pour l'instant : tir vertical
     this.bubble.color = color || this.bubble.color;
     this.bubble.vy = -5; // vers le haut
     this.hasShot = true;

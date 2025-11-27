@@ -21,7 +21,7 @@ const startFromModalButton = document.getElementById('start-from-modal');
 
 // --- VARIABLES DE JEU ---
 let game = null;
-let selectedColor = 'red'; 
+let selectedColor = '#ff4d4d'; 
 let gameScore = 0;
 let gameTime = 0;
 let gameTimeInterval = null;
@@ -30,7 +30,7 @@ let gameTimeInterval = null;
 const BUBBLE_RADIUS = 20;
 const CANVAS_WIDTH = canvas.width;
 const CANVAS_HEIGHT = canvas.height;
-const COLORS = ['red', 'blue', 'green', 'yellow'];
+const COLORS = ['#ff4d4d', '#4d94ff', '#4dff4d', '#ffff4d'];
 
 // initialisation de la grille de bulles
 let bubblesGrid = []; 
@@ -156,7 +156,6 @@ function initializeGame() {
     // instanciation de ton moteur de jeu
     game = new Game(canvas, ctx, {
         radius: 20,
-        colors: ["red", "blue", "green", "yellow"]
     });
 
     gameIsRunning = true;
