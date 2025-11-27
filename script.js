@@ -257,7 +257,7 @@ class Game {
     }
 
     if (bestRow === null || bestCol === null) {
-      // pas de case candidate -> on abandonne (ou on reset)
+      // pas de case -> on reset
       this.resetBubble();
       return;
     }
@@ -272,7 +272,7 @@ class Game {
     this.bubble.y = center.y;
     this.bubble.vy = 0;
 
-    // 3) On place cette même instance dans la grille
+    // 3) On la place dans la grille
     this.grid[bestRow][bestCol] = this.bubble;
 
     // 4) Puis on supprime la bulle tirée (elle ne sera plus dessinée séparément)
