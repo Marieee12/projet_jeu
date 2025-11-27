@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projet JS Bubble Shooter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- LE LOADER -->
+    <div id="loader-screen" class="screen active">
+        <div class="loader-content">
+            <h1 class="loader-title">Bubble Shooter</h1>
+            <div class="bubble-loader">
+                <div class="bubble-item bubble-1"></div>
+                <div class="bubble-item bubble-2"></div>
+                <div class="bubble-item bubble-3"></div>
+                <div class="bubble-item bubble-4"></div>
+            </div>
+            <p class="loader-text">Chargement en cours...</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LANDING PAGE -->
+    <div id="landing-page" class="screen hidden menu-layout">
+        
+        <!-- Gauche CLASSEMENT SIMULÉ -->
+        <div id="leaderboard" class="panel panel-left slide-in-left">
+            <h2>CLASSEMENT</h2>
+            <table>
+                <thead>
+                    <tr><th>Rang</th><th>Pseudo</th><th>Score</th></tr>
+                </thead>
+                <tbody>
+                    <tr class="rank-1"><td>🥇</td><td>Alice</td><td>3110</td></tr>
+                    <tr class="rank-2"><td>🥈</td><td>Bob</td><td>3030</td></tr>
+                    <tr class="rank-3"><td>🥉</td><td>Chloé</td><td>3000</td></tr>
+                    <tr><td>4</td><td>David</td><td>2980</td></tr>
+                    <tr><td>5</td><td>Emma</td><td>2930</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- milieu ZONE PRINCIPALE ET BOUTONS -->
+        <div id="main-center">
+            <h1 class="game-logo pulse-animation">Bubble Shooter</h1> 
+            <p class="slogan">Visez. Tirez. Explosez.</p>
+            
+            <div id="main-buttons">
+                <button id="start-button" class="btn-primary">
+                    <span class="btn-icon">▶</span> JOUER
+                </button>
+                <button id="rules-button" class="btn-secondary">
+                    <span class="btn-icon"></span> RÈGLES DU JEU
+                </button>
+            </div>
+        </div>
+
+        <!-- Droite RÈGLES DU JEU -->
+        <div id="rules-menu" class="panel panel-right slide-in-right">
+            
+            <div class="menu-block rules-block">
+                <h3>MÉCANIQUES CLÉS</h3>
+                
+                <h4>Match-3</h4>
+                <div class="rule-example">
+                    <span class="bubble-example red pulse"></span>
+                    <span class="bubble-example red pulse"></span>
+                    <span class="bubble-example red pulse"></span>
+                </div>
+                <p>Éclate si vous connectez 3 bulles ou plus de la même couleur.</p>
+                
+                <h4>Rebonds</h4>
+                <p>La balle rebondit sur les murs latéraux pour atteindre les zones difficiles.</p>
+
+                <p class="points">Score: 10 points pour une explosion standard. Bonus pour les chutes !</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENEUR PRINCIPAL DU JEU -->
+    <div id="game-screen" class="screen hidden">
+        <div id="game-header">
+            <div id="game-info">
+                <div class="info-item">
+                    <span class="info-label">Score</span>
+                    <span id="score-display" class="info-value">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">⏱Temps</span>
+                    <span id="time-display" class="info-value">0:00</span>
+                </div>
+                <div class="info-item">
+                    <button id="pause-button" class="icon-button">⏸️</button>
+                    <button id="back-to-menu" class="icon-button">🏠</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Canvas où le jeu sera dessiné -->
+        <div id="canvas-container">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            <div id="aim-indicator"></div>
+        </div>
+
+        <!-- Zone de choix de couleur -->
+        <div id="color-palette">
+            <h3>Prochaine balle :</h3>
+            <div class="palette-colors">
+                <button class="color-select selected" data-color="red" style="background-color: #ff4d4d;" title="Rouge"></button>
+                <button class="color-select" data-color="blue" style="background-color: #4d94ff;" title="Bleu"></button>
+                <button class="color-select" data-color="green" style="background-color: #4dff4d;" title="Vert"></button>
+                <button class="color-select" data-color="yellow" style="background-color: #ffff4d;" title="Jaune"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP RÈGLES -->
+    <div id="rules-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="close-rules-modal">✕</button>
+            <h2 class="modal-title">RÈGLES DU JEU</h2>
+            
+            <div class="rules-section">
+                <div class="rule-item">
+                    <div class="rule-icon">🎯</div>
+                    <div class="rule-text">
+                        <h3>Objectif</h3>
+                        <p>Éclater toutes les bulles du plateau pour gagner !</p>
+                    </div>
+                </div>
+
+                <div class="rule-item">
+                    <div class="rule-icon">🎨</div>
+                    <div class="rule-text">
+                        <h3>Match-3</h3>
+                        <p>Connectez 3 bulles ou plus de la même couleur pour les faire exploser</p>
+                        <div class="rule-demo">
+                            <span class="demo-bubble" style="background: #ff4d4d;"></span>
+                            <span class="demo-bubble" style="background: #ff4d4d;"></span>
+                            <span class="demo-bubble" style="background: #ff4d4d;"></span>
+                            <span class="demo-text">Boom!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rule-item">
+                    <div class="rule-icon">↩️</div>
+                    <div class="rule-text">
+                        <h3>Rebonds</h3>
+                        <p>Les bulles rebondissent sur les murs latéraux pour atteindre les zones difficiles</p>
+                    </div>
+                </div>
+
+                <div class="rule-item">
+                    <div class="rule-icon">💰</div>
+                    <div class="rule-text">
+                        <h3>Points</h3>
+                        <p><strong>10 points</strong> pour une explosion standard</p>
+                        <p><strong>Bonus</strong> pour les bulles qui tombent en cascade !</p>
+                    </div>
+                </div>
+            </div>
+
+            <button class="modal-button" id="start-from-modal">
+                <span class="btn-icon">▶</span> Commencer à jouer
+            </button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
