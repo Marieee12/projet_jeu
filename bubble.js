@@ -1,3 +1,4 @@
+// bubble.js
 export class Bubble {
   constructor(x, y, radius, color, vy = 0) {
     this.x = x;
@@ -7,7 +8,7 @@ export class Bubble {
     this.vy = vy; // vitesse verticale : négatif = vers le haut
   }
 
-  // Déplaement bulle
+  // Déplacement bulle
   update() {
     this.y += this.vy; // la bulle monte de 5 pixels par frame (-5)
   }
