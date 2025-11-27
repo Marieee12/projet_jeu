@@ -21,7 +21,7 @@ const startFromModalButton = document.getElementById('start-from-modal');
 
 // --- VARIABLES DE JEU ---
 let game = null;
-let selectedColor = 'red'; 
+let selectedColor = '#ff4d4d'; 
 let gameScore = 0;
 let gameTime = 0;
 let gameTimeInterval = null;
@@ -30,7 +30,7 @@ let gameTimeInterval = null;
 const BUBBLE_RADIUS = 20;
 const CANVAS_WIDTH = canvas.width;
 const CANVAS_HEIGHT = canvas.height;
-const COLORS = ['red', 'blue', 'green', 'yellow'];
+const COLORS = ['#ff4d4d', '#4d94ff', '#4dff4d', '#ffff4d'];
 
 // initialisation de la grille de bulles
 let bubblesGrid = []; 
@@ -156,7 +156,6 @@ function initializeGame() {
     // instanciation de ton moteur de jeu
     game = new Game(canvas, ctx, {
         radius: 20,
-        colors: ["red", "blue", "green", "yellow"]
     });
 
     gameIsRunning = true;
@@ -234,21 +233,21 @@ function calculateAngle(mouseX, mouseY) {
 
 
 /** Déclenche le tir lors du clic sur le Canvas. */
-canvas.addEventListener('click', (e) => {
-    if (!gameIsRunning || !game) return;
+// canvas.addEventListener('click', (e) => {
+//     if (!gameIsRunning || !game) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+//     const rect = canvas.getBoundingClientRect();
+//     const mouseX = e.clientX - rect.left;
+//     const mouseY = e.clientY - rect.top;
     
-    // On ne tire que dans la zone supérieure pour ne pas cliquer sur la palette
-    if (mouseY > CANVAS_HEIGHT - 50) return; 
+//     // On ne tire que dans la zone supérieure pour ne pas cliquer sur la palette
+//     if (mouseY > CANVAS_HEIGHT - 50) return; 
 
-    const angle = calculateAngle(mouseX, mouseY);
+//     const angle = calculateAngle(mouseX, mouseY);
 
-    // utilisation de ton moteur de jeu
-    game.shoot(angle, selectedColor);
-});
+//     // utilisation de ton moteur de jeu
+//     game.shoot(angle, selectedColor);
+// });
 
 /** Crée et lance la bulle. */
 function shootBubble(angle) {
@@ -270,3 +269,16 @@ function shootBubble(angle) {
 
 // --- DÉMARRAGE (après le loader) ---
 setTimeout(hideLoader, 2000);
+
+document.addEventListener('keydown', (e) => {
+    // On ne tire que si le jeu tourne et que le canvas est affiché
+    if (!gameIsRunning || !game) return;
+
+    if (e.code === 'Space' || e.code === 'ArrowUp') {
+        // Tir tout droit vers le haut
+        const angle = -Math.PI / 2; // -90° en radians
+
+        // Ton moteur de jeu gère déjà angle + couleur
+        game.shoot(angle, selectedColor);
+    }
+});
