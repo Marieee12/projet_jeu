@@ -20,7 +20,7 @@ export class Bubble {
     ctx.fillStyle = this.color;
     ctx.fill();
 
-    ctx.strokeStyle = "#111";
+    ctx.strokeStyle = "#636364ff";
     ctx.lineWidth = 2;
     ctx.stroke();
   }

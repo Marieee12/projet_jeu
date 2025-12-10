@@ -6,16 +6,16 @@ export class Game {
     this.ctx = ctx;
 
     // Options
-    this.radius = options.radius || 20;
+    this.radius = options.radius || 16;
     this.colors =
       options.colors || ["#ff4d4d", "#4d94ff", "#4dff4d", "#ffff4d"]; 
     this.spacingX = this.radius * 2;            // écart horizontal = diamètre
     this.spacingY = this.radius * Math.sqrt(3); // écart vertical type hexagone
 
     // Grille logique
-    this.rows = 10; // nombre total de lignes dans la grille
+    this.rows = 20; // nombre total de lignes dans la grille (PLUS DE HAUTEUR)
     this.cols = Math.floor((this.canvas.width - this.radius) / this.spacingX);
-    this.startY = 80; // y de la première ligne
+    this.startY = 40; // y de la première ligne (on commence plus haut)
 
     // grid[row][col] = Bubble | null
     this.grid = [];
@@ -397,7 +397,17 @@ export class Game {
   }
 
   drawBackground() {
-    this.ctx.fillStyle = "#020617";
+    // fond violet avec le même dégradé que l'interface (135°)
+    const gradient = this.ctx.createLinearGradient(
+      0,
+      0,
+      this.canvas.width,
+      this.canvas.height
+    );
+    gradient.addColorStop(0, "#667eea");
+    gradient.addColorStop(1, "#764ba2");
+
+    this.ctx.fillStyle = gradient;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
@@ -428,6 +438,8 @@ export class Game {
     this.hasShot = true;
   }
 }
+
+
 
 
 

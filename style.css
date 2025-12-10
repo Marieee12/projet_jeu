@@ -22,7 +22,7 @@
 
 body {
   display: flex;
-  justify-content: center;
+  justify-content: center;      /* plus centré verticalement, le jeu colle en haut */
   align-items: center;
   min-height: 100vh;
   margin: 0;
@@ -34,8 +34,12 @@ body {
 
 #gameCanvas {
     border: 2px solid #444;
-    background: #000;
+    background: transparent;   /* on laisse voir le violet derrière */
+    width: 700px;
+    height: 500px;             /* taille fixe = pas de déformation */
+    display: block;
 }
+
 
 /* Gestion des Écrans (Loader, Landing, Game) */
 .screen {
@@ -486,8 +490,9 @@ body {
 
 /* --- GAME SCREEN --- */
 #game-screen {
-    width: 820px;
-    height: auto;
+    width: 100%;
+    max-width: 820px;
+    height: 100vh;                 /* prend toute la hauteur de la fenêtre */
     background: var(--color-secondary);
     border: none;
     border-radius: 20px;
@@ -500,31 +505,34 @@ body {
     width: 100%;
     background: linear-gradient(135deg, var(--color-panel) 0%, var(--color-secondary) 100%);
     padding: 0;
+    height: 48px;                  /* header fin */
+    display: flex;
+    align-items: center;
 }
 
 #game-info {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: center;
-    padding: 20px;
+    padding: 6px 12px;             /* peu de padding */
     color: var(--color-text-light);
 }
 
 .info-item {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;           /* en ligne */
     align-items: center;
-    gap: 5px;
+    gap: 6px;
 }
 
 .info-label {
-    font-size: 0.9em;
-    opacity: 0.8;
+    font-size: 0.8em;
+    opacity: 0.85;
     font-weight: 400;
 }
 
 .info-value {
-    font-size: 1.8em;
+    font-size: 1.2em;
     font-weight: 700;
     color: var(--color-accent-light);
     text-shadow: 0 2px 10px rgba(233, 69, 96, 0.3);
@@ -534,13 +542,13 @@ body {
     background: rgba(255, 255, 255, 0.1);
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 50%;
-    width: 45px;
-    height: 45px;
-    font-size: 1.2em;
+    width: 30px;
+    height: 30px;
+    font-size: 1em;
     cursor: pointer;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
-    margin: 0 5px;
+    margin: 0 3px;
 }
 
 .icon-button:hover {
@@ -552,9 +560,12 @@ body {
 #canvas-container {
     position: relative;
     width: 100%;
+    flex: 1;                       
     display: flex;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    align-items: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* violet */
+    padding: 0;
 }
 
 /* #gameCanvas {
@@ -577,28 +588,28 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 20px;
-    padding: 25px;
+    gap: 12px;
+    padding: 8px 16px;             /* footer plus fin */
     background: linear-gradient(135deg, var(--color-panel) 0%, var(--color-secondary) 100%);
     color: var(--color-text-light);
 }
 
 #color-palette h3 {
-    font-size: 1.1em;
+    font-size: 0.9em;
     font-weight: 600;
     margin: 0;
 }
 
 .palette-colors {
     display: flex;
-    gap: 15px;
+    gap: 10px;
 }
 
 .color-select {
-    width: 45px;
-    height: 45px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    border: 3px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.3);
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -626,14 +637,14 @@ body {
 }
 
 .color-select:hover {
-    transform: scale(1.2) translateY(-5px);
+    transform: scale(1.15) translateY(-3px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
 
 .color-select.selected {
     transform: scale(1.15);
     border-color: var(--color-accent);
-    border-width: 4px;
+    border-width: 3px;
     box-shadow: 0 0 20px rgba(233, 69, 96, 0.6), 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
