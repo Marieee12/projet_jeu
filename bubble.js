@@ -5,10 +5,12 @@ export class Bubble {
     this.radius = radius;
     this.color = color;
     this.vy = vy; // vitesse verticale : négatif = vers le haut
+    this.vx = 0;  // vitesse horizontale (ajoutée pour le tir en angle)
   }
 
   // Déplacement bulle
   update() {
+    this.x += this.vx;          // déplacement horizontal
     this.y += this.vy; // la bulle monte de 5 pixels par frame (-5)
   }
 

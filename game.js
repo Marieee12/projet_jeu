@@ -29,7 +29,7 @@ export class Game {
       this.startX,
       this.shooterY,
       this.radius,
-      this.colors[2],
+      this.getRandomColor(), // couleur de départ aléatoire
       0
     );
 
@@ -38,6 +38,12 @@ export class Game {
     this.updateShooterPositionFromTopRow();
 
     this.hasShot = false;
+  }
+
+  // Donne une couleur aléatoire (AJOUT)
+  getRandomColor() {
+    const index = Math.floor(Math.random() * this.colors.length);
+    return this.colors[index];
   }
 
   // Initialise la grille : quelques lignes remplies, le reste vide
@@ -315,6 +321,7 @@ export class Game {
     this.bubble.x = center.x;
     this.bubble.y = center.y;
     this.bubble.vy = 0;
+    this.bubble.vx = 0;
 
     // 3) On la place dans la grille
     this.grid[bestRow][bestCol] = this.bubble;
@@ -338,7 +345,7 @@ export class Game {
       this.startX,
       this.shooterY,
       this.radius,
-      this.colors[2],
+      this.getRandomColor(), // couleur aléatoire
       0
     );
     this.hasShot = false;
@@ -351,6 +358,15 @@ export class Game {
 
     if (this.bubble && this.bubble.vy !== 0) {
       this.bubble.update();
+
+      // Rebond sur les murs gauche/droite
+      if (this.bubble.x - this.radius <= 0) {
+        this.bubble.x = this.radius;
+        this.bubble.vx *= -1;
+      } else if (this.bubble.x + this.radius >= this.canvas.width) {
+        this.bubble.x = this.canvas.width - this.radius;
+        this.bubble.vx *= -1;
+      }
 
       const collision = this.checkCollision();
       if (collision) {
@@ -373,6 +389,10 @@ export class Game {
     this.bubble.x = this.startX;
     this.bubble.y = this.shooterY;
     this.bubble.vy = 0;
+    this.bubble.vx = 0;
+
+    this.bubble.color = this.getRandomColor(); // nouvelle couleur aléatoire
+
     this.hasShot = false;
   }
 
@@ -400,10 +420,14 @@ export class Game {
     if (!this.bubble) return;
     if (this.bubble.vy !== 0) return; // on ne tire que si elle est immobile
 
-    // angle ignoré pour l'instant : tir vertical
-    this.bubble.color = color || this.bubble.color;
-    this.bubble.vy = -5; // vers le haut
+    const speed = 7; // vitesse de tir
+
+    // on NE change PLUS la couleur ici : on garde la couleur aléatoire déjà assignée
+    this.bubble.vx = Math.cos(angle) * speed;
+    this.bubble.vy = Math.sin(angle) * speed; // négatif pour monter si angle = -PI/2
     this.hasShot = true;
   }
 }
+
+
 
