@@ -21,7 +21,7 @@ const startFromModalButton = document.getElementById('start-from-modal');
 
 // --- VARIABLES DE JEU ---
 let game = null;
-let selectedColor = '#ff4d4d'; 
+let selectedColor = '#4dff4d'; 
 let gameScore = 0;
 let gameTime = 0;
 let gameTimeInterval = null;

@@ -1,4 +1,3 @@
-// bubble.js
 export class Bubble {
   constructor(x, y, radius, color, vy = 0) {
     this.x = x;

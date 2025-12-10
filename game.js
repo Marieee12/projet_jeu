@@ -1,4 +1,3 @@
-// game.js
 import { Bubble } from "./bubble.js";
 
 export class Game {
@@ -30,7 +29,7 @@ export class Game {
       this.startX,
       this.shooterY,
       this.radius,
-      this.colors[0],
+      this.colors[2],
       0
     );
 
@@ -339,7 +338,7 @@ export class Game {
       this.startX,
       this.shooterY,
       this.radius,
-      this.colors[0],
+      this.colors[2],
       0
     );
     this.hasShot = false;
