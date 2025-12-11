@@ -21,7 +21,7 @@ const startFromModalButton = document.getElementById('start-from-modal');
 
 // --- VARIABLES DE JEU ---
 let game = null;
-let selectedColor = '#ff4d4d'; 
+let selectedColor = '#4dff4d'; 
 let gameScore = 0;
 let gameTime = 0;
 let gameTimeInterval = null;
@@ -31,6 +31,14 @@ const BUBBLE_RADIUS = 20;
 const CANVAS_WIDTH = canvas.width;
 const CANVAS_HEIGHT = canvas.height;
 const COLORS = ['#ff4d4d', '#4d94ff', '#4dff4d', '#ffff4d'];
+
+// mapping hex -> nom (data-color des boutons)
+const COLOR_HEX_TO_NAME = {
+    '#ff4d4d': 'red',
+    '#4d94ff': 'blue',
+    '#4dff4d': 'green',
+    '#ffff4d': 'yellow',
+};
 
 // initialisation de la grille de bulles
 let bubblesGrid = []; 
@@ -140,6 +148,25 @@ colorButtons.forEach(button => {
 
 // --- LOGIQUE DU JEU ---
 
+/** Met à jour l'affichage "Prochaine balle" dans la palette 
+ * en fonction de la couleur de la bulle prête à être tirée (game.bubble.color).
+ */
+function updateNextBubblePreview() {
+    if (!game || !game.bubble) return;
+
+    const currentHex = game.bubble.color;
+    const colorName = COLOR_HEX_TO_NAME[currentHex] || null;
+
+    colorButtons.forEach(btn => {
+        const btnColorName = btn.getAttribute('data-color');
+        if (colorName && btnColorName === colorName) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
+    });
+}
+
 /** Initialise la grille, le canon et lance la boucle de jeu. */
 function initializeGame() {
     gameScore = 0;
@@ -157,6 +184,9 @@ function initializeGame() {
     game = new Game(canvas, ctx, {
         radius: 20,
     });
+
+    // On synchronise la palette avec la couleur de la bulle prête à être tirée
+    updateNextBubblePreview();
 
     gameIsRunning = true;
     gameLoop();
@@ -183,6 +213,9 @@ function update() {
         gameScore += removed * 10;
         updateScoreDisplay();
     }
+
+    // À chaque frame on met à jour la "Prochaine balle" d'après game.bubble.color
+    updateNextBubblePreview();
 }
 
 /** Dessine tous les éléments sur le Canvas. */
@@ -207,8 +240,8 @@ function gameLoop() {
 
 /** Calcule l'angle entre le canon et la position de la souris. */
 function calculateAngle(mouseX, mouseY) {
-    const cannonX = CANVAS_WIDTH / 2;
-    const cannonY = CANVAS_HEIGHT - BUBBLE_RADIUS * 2; // Position du canon
+    const cannonX = game ? game.startX : CANVAS_WIDTH / 2;
+    const cannonY = game ? game.shooterY : CANVAS_HEIGHT - BUBBLE_RADIUS * 2; // Position du canon
     
     const dx = mouseX - cannonX;
     const dy = mouseY - cannonY;
@@ -217,16 +250,13 @@ function calculateAngle(mouseX, mouseY) {
     let angle = Math.atan2(dy, dx);
     
     // Limiter l'angle pour ne pas tirer vers le bas (entre -165° et -15°)
-    const minAngle = Math.PI + 0.3; // 165 degrés
-    const maxAngle = -0.3;          // -15 degrés
+    const minAngle = (-160 * Math.PI) / 180; // 165 degrés
+    const maxAngle = (-20 * Math.PI) / 180;  // -15 degrés
     
     // Inverser l'angle pour travailler dans le repère du Canvas (angle par rapport à l'horizontale positive)
     // Mais pour le tir, nous nous intéressons seulement à l'orientation du canon.
-    if (angle > maxAngle && angle < 0) {
-        angle = maxAngle;
-    } else if (angle < -Math.PI) {
-        angle = minAngle;
-    }
+    if (angle < minAngle) angle = minAngle;
+    if (angle > maxAngle) angle = maxAngle;
 
     return angle;
 }
@@ -248,6 +278,22 @@ function calculateAngle(mouseX, mouseY) {
 //     // utilisation de ton moteur de jeu
 //     game.shoot(angle, selectedColor);
 // });
+
+canvas.addEventListener('click', (e) => {
+    if (!gameIsRunning || !game) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    // On ne tire que dans la zone supérieure pour ne pas cliquer sur la palette
+    if (mouseY > CANVAS_HEIGHT - 50) return; 
+
+    const angle = calculateAngle(mouseX, mouseY);
+
+    // utilisation de ton moteur de jeu
+    game.shoot(angle, selectedColor);
+});
 
 /** Crée et lance la bulle. */
 function shootBubble(angle) {
@@ -282,3 +328,6 @@ document.addEventListener('keydown', (e) => {
         game.shoot(angle, selectedColor);
     }
 });
+
+
+

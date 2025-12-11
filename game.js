@@ -1,4 +1,3 @@
-// game.js
 import { Bubble } from "./bubble.js";
 
 export class Game {
@@ -7,20 +6,20 @@ export class Game {
     this.ctx = ctx;
 
     // Options
-    this.radius = options.radius || 20;
+    this.radius = options.radius || 16;
     this.colors =
-      options.colors || ["#ff4d4d", "#4d94ff", "#4dff4d", "#ffff4d"]; 
+      options.colors || ["#ff4d4d", "#4d94ff", "#4dff4d", "#ffff4d"];
     this.spacingX = this.radius * 2;            // écart horizontal = diamètre
     this.spacingY = this.radius * Math.sqrt(3); // écart vertical type hexagone
 
     // Grille logique
-    this.rows = 10; // nombre total de lignes dans la grille
+    this.rows = 14; // nombre total de lignes dans la grille
     this.cols = Math.floor((this.canvas.width - this.radius) / this.spacingX);
-    this.startY = 80; // y de la première ligne
+    this.startY = 60; // y de la première ligne
 
     // grid[row][col] = Bubble | null
     this.grid = [];
-    this.initGrid(7); 
+    this.initGrid(6); // lignes du haut remplies "comme au début"
 
     // Bulle tirée (position provisoire, on recale après)
     this.startX = this.canvas.width / 2;
@@ -30,7 +29,7 @@ export class Game {
       this.startX,
       this.shooterY,
       this.radius,
-      this.colors[0],
+      this.getRandomColorFromBottomRows(), // couleur de départ basée sur les lignes du bas
       0
     );
 
@@ -39,9 +38,62 @@ export class Game {
     this.updateShooterPositionFromTopRow();
 
     this.hasShot = false;
+
+    // Compteur de tours pour la descente progressive du plateau
+    this.turnCount = 0;      // nombre de tirs effectués
+    this.turnsPerDrop = 10;  // 🔽 le plateau descend tous les 10 tirs (augmente si tu veux encore plus de temps)
+  }
+
+  // Donne une couleur aléatoire parmi une liste
+  getRandomColor(sourceColors) {
+    const palette =
+      sourceColors && sourceColors.length > 0 ? sourceColors : this.colors;
+    const index = Math.floor(Math.random() * palette.length);
+    return palette[index];
+  }
+
+  // Renvoie la liste des couleurs présentes dans les lignes du bas (par ex. les 3 dernières lignes occupées)
+  getAvailableColorsFromBottomRows(maxDepth = 3) {
+    // trouver la ligne occupée la plus basse
+    let bottomRow = null;
+    for (let row = this.rows - 1; row >= 0; row--) {
+      for (let col = 0; col < this.cols; col++) {
+        if (this.grid[row][col]) {
+          bottomRow = row;
+          break;
+        }
+      }
+      if (bottomRow !== null) break;
+    }
+
+    if (bottomRow === null) {
+      // plus aucune bulle -> aucune contrainte
+      return [];
+    }
+
+    const minRow = Math.max(0, bottomRow - (maxDepth - 1));
+    const set = new Set();
+
+    for (let row = bottomRow; row >= minRow; row--) {
+      for (let col = 0; col < this.cols; col++) {
+        const bubble = this.grid[row][col];
+        if (bubble) {
+          set.add(bubble.color);
+        }
+      }
+    }
+
+    return Array.from(set);
+  }
+
+  // utilitaire : couleur aléatoire basée sur les lignes du bas
+  getRandomColorFromBottomRows() {
+    const colors = this.getAvailableColorsFromBottomRows(3);
+    return this.getRandomColor(colors);
   }
 
   // Initialise la grille : quelques lignes remplies, le reste vide
+  // (pattern "comme au début" : lignes complètes en haut)
   initGrid(initialFilledRows) {
     for (let row = 0; row < this.rows; row++) {
       this.grid[row] = [];
@@ -182,7 +234,8 @@ export class Game {
     const neighbors = [];
     const isOdd = row % 2 === 1;
 
-    // offsets différents selon si la ligne est décalée ou non
+    // Grille
+  
     const deltas = isOdd
       ? [
           [-1, 0],
@@ -199,7 +252,8 @@ export class Game {
           [0, 1],
           [1, -1],
           [1, 0],
-        ];
+        ]; // Une ligne sur deux est décalée vers la droite.
+// C’est ce décalage qui permet d’avoir 6 voisins par bulle (comme un hexagone)
 
     for (const [dr, dc] of deltas) {
       const r = row + dr;
@@ -251,6 +305,37 @@ export class Game {
   removeBubbles(group) {
     for (const { r, c } of group) {
       this.grid[r][c] = null;
+    }
+  }
+
+  // Fait descendre tout le plateau d'une "ligne" vers le bas
+  dropGridOneStep() {
+    // On vérifie s'il reste au moins une bulle
+    let hasBubble = false;
+    for (let row = 0; row < this.rows; row++) {
+      for (let col = 0; col < this.cols; col++) {
+        if (this.grid[row][col]) {
+          hasBubble = true;
+          break;
+        }
+      }
+      if (hasBubble) break;
+    }
+    if (!hasBubble) return; // plus rien à descendre
+
+    // On descend le point de départ de la grille
+    this.startY += this.spacingY;
+
+    // On recalcule la position de toutes les bulles de la grille
+    for (let row = 0; row < this.rows; row++) {
+      for (let col = 0; col < this.cols; col++) {
+        const bubble = this.grid[row][col];
+        if (!bubble) continue;
+
+        const center = this.getCellCenter(row, col);
+        bubble.x = center.x;
+        bubble.y = center.y;
+      }
     }
   }
 
@@ -316,11 +401,12 @@ export class Game {
     this.bubble.x = center.x;
     this.bubble.y = center.y;
     this.bubble.vy = 0;
+    this.bubble.vx = 0;
 
     // 3) On la place dans la grille
     this.grid[bestRow][bestCol] = this.bubble;
 
-    // 4) Puis on supprime la bulle tirée (elle ne sera plus dessinée séparément)
+    // 4) Puis on supprime la bulle tirée 
     this.bubble = null;
 
     // Match-3 à partir de cette case
@@ -331,6 +417,14 @@ export class Game {
       this.removeBubbles(group);
     }
 
+    // On compte ce tir comme un tour joué
+    this.turnCount++;
+
+    //  Le plateau descend d'une ligne tous les X tirs
+    if (this.turnCount % this.turnsPerDrop === 0) {
+      this.dropGridOneStep();
+    }
+
     // On recalcule la meilleure colonne de tir AVANT de créer la nouvelle bulle
     this.updateShooterPositionFromTopRow();
 
@@ -339,7 +433,7 @@ export class Game {
       this.startX,
       this.shooterY,
       this.radius,
-      this.colors[0],
+      this.getRandomColorFromBottomRows(), // couleur basée sur les lignes du bas
       0
     );
     this.hasShot = false;
@@ -353,12 +447,21 @@ export class Game {
     if (this.bubble && this.bubble.vy !== 0) {
       this.bubble.update();
 
+      // Rebond sur les murs gauche/droite
+      if (this.bubble.x - this.radius <= 0) {
+        this.bubble.x = this.radius;
+        this.bubble.vx *= -1;
+      } else if (this.bubble.x + this.radius >= this.canvas.width) {
+        this.bubble.x = this.canvas.width - this.radius;
+        this.bubble.vx *= -1;
+      }
+
       const collision = this.checkCollision();
       if (collision) {
         removed = this.attachBubbleToGrid(collision);
       }
 
-      // Si elle sort du haut pour une raison quelconque
+      // Si elle sort du haut 
       if (this.bubble && this.bubble.y + this.bubble.radius < 0) {
         this.resetBubble();
       }
@@ -374,11 +477,26 @@ export class Game {
     this.bubble.x = this.startX;
     this.bubble.y = this.shooterY;
     this.bubble.vy = 0;
+    this.bubble.vx = 0;
+
+    // Nouvelle couleur basée sur les couleurs des lignes du bas
+    this.bubble.color = this.getRandomColorFromBottomRows();
+
     this.hasShot = false;
   }
 
   drawBackground() {
-    this.ctx.fillStyle = "#020617";
+    // fond violet 
+    const gradient = this.ctx.createLinearGradient(
+      0,
+      0,
+      this.canvas.width,
+      this.canvas.height
+    );
+    gradient.addColorStop(0, "#667eea");
+    gradient.addColorStop(1, "#764ba2");
+
+    this.ctx.fillStyle = gradient;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
@@ -396,15 +514,21 @@ export class Game {
   }
 
   // Tir de la bulle
-  // signature attendue: shoot(angle, color)
+  // attendues: shoot(angle, color)
   shoot(angle, color) {
     if (!this.bubble) return;
     if (this.bubble.vy !== 0) return; // on ne tire que si elle est immobile
 
-    // angle ignoré pour l'instant : tir vertical
-    this.bubble.color = color || this.bubble.color;
-    this.bubble.vy = -5; // vers le haut
+    const speed = 7; // vitesse de tir
+    this.bubble.vx = Math.cos(angle) * speed;
+    this.bubble.vy = Math.sin(angle) * speed; // négatif pour monter si angle = -PI/2
     this.hasShot = true;
   }
 }
+
+
+
+
+
+
 

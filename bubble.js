@@ -1,4 +1,3 @@
-// bubble.js
 export class Bubble {
   constructor(x, y, radius, color, vy = 0) {
     this.x = x;
@@ -6,10 +5,12 @@ export class Bubble {
     this.radius = radius;
     this.color = color;
     this.vy = vy; // vitesse verticale : négatif = vers le haut
+    this.vx = 0;  // vitesse horizontale (ajoutée pour le tir en angle)
   }
 
   // Déplacement bulle
   update() {
+    this.x += this.vx;          // déplacement horizontal
     this.y += this.vy; // la bulle monte de 5 pixels par frame (-5)
   }
 
@@ -19,7 +20,7 @@ export class Bubble {
     ctx.fillStyle = this.color;
     ctx.fill();
 
-    ctx.strokeStyle = "#111";
+    ctx.strokeStyle = "#636364ff";
     ctx.lineWidth = 2;
     ctx.stroke();
   }
