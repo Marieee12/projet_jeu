@@ -15,10 +15,15 @@ const timeDisplay = document.getElementById("time-display");
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-// Modal
+// Modal règles
 const rulesModal = document.getElementById("rules-modal");
 const closeModalButton = document.getElementById("close-rules-modal");
 const startFromModalButton = document.getElementById("start-from-modal");
+
+// Modal game over
+const gameOverModal = document.getElementById("gameover-modal");
+const restartGameBtn = document.getElementById("restart-game");
+const quitGameBtn = document.getElementById("quit-game");
 
 // --- VARIABLES ---
 let game = null;
@@ -30,14 +35,7 @@ let gameIsRunning = false;
 const CANVAS_WIDTH = canvas.width;
 const CANVAS_HEIGHT = canvas.height;
 
-// Palette : data-color = red/blue/green/yellow -> hex
-const COLOR_NAME_TO_HEX = {
-  red: "#ff4d4d",
-  blue: "#4d94ff",
-  green: "#4dff4d",
-  yellow: "#ffff4d",
-};
-
+// mapping hex -> nom (data-color des boutons)
 const COLOR_HEX_TO_NAME = {
   "#ff4d4d": "red",
   "#4d94ff": "blue",
@@ -45,9 +43,7 @@ const COLOR_HEX_TO_NAME = {
   "#ffff4d": "yellow",
 };
 
-let selectedColorHex = "#4dff4d"; // défaut
-
-// --- UI SCREENS ---
+// --- GESTION DES ÉCRANS ---
 function hideLoader() {
   loaderScreen.classList.add("hidden");
   landingPage.classList.remove("hidden");
@@ -60,9 +56,10 @@ function hideLoader() {
   }, 100);
 }
 
-function closeRulesModal() {
-  rulesModal.classList.add("hidden");
-  document.body.style.overflow = "auto";
+function stopGame() {
+  gameIsRunning = false;
+  if (gameTimeInterval) clearInterval(gameTimeInterval);
+  gameTimeInterval = null;
 }
 
 startButton?.addEventListener("click", () => {
@@ -86,13 +83,18 @@ pauseButton?.addEventListener("click", () => {
   if (gameIsRunning) gameLoop();
 });
 
+// --- MODAL RÈGLES ---
 rulesButton?.addEventListener("click", () => {
   rulesModal.classList.remove("hidden");
   document.body.style.overflow = "hidden";
 });
 
-closeModalButton?.addEventListener("click", closeRulesModal);
+function closeRulesModal() {
+  rulesModal.classList.add("hidden");
+  document.body.style.overflow = "auto";
+}
 
+closeModalButton?.addEventListener("click", closeRulesModal);
 rulesModal?.querySelector(".modal-overlay")?.addEventListener("click", closeRulesModal);
 
 startFromModalButton?.addEventListener("click", () => {
@@ -108,69 +110,32 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// --- PALETTE ---
-colorButtons.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const name = btn.dataset.color; // red/blue/green/yellow
-    if (name && COLOR_NAME_TO_HEX[name]) {
-      selectedColorHex = COLOR_NAME_TO_HEX[name];
-    }
+// --- MODAL GAME OVER ---
+function openGameOverModal() {
+  if (!gameOverModal) return;
+  gameOverModal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
 
-    // feedback visuel : selected
-    colorButtons.forEach((b) => b.classList.remove("selected"));
-    btn.classList.add("selected");
-  });
+function closeGameOverModal() {
+  if (!gameOverModal) return;
+  gameOverModal.classList.add("hidden");
+  document.body.style.overflow = "auto";
+}
+
+restartGameBtn?.addEventListener("click", () => {
+  closeGameOverModal();
+  initializeGame(); // relance direct
 });
 
-function updateNextBubblePreview() {
-  if (!game) return;
+quitGameBtn?.addEventListener("click", () => {
+  closeGameOverModal();
+  stopGame();
+  gameScreen.classList.add("hidden");
+  landingPage.classList.remove("hidden");
+});
 
-  // on affiche la couleur SUIVANTE (preview)
-  const hex = game.nextColor;
-  const name = COLOR_HEX_TO_NAME[hex];
-
-  if (!name) return;
-
-  colorButtons.forEach((btn) => {
-    btn.classList.toggle("selected", btn.dataset.color === name);
-  });
-}
-
-
-// --- GAME INIT / STOP ---
-function initializeGame() {
-  stopGame(); // nettoie si on relance
-
-  gameScore = 0;
-  gameTime = 0;
-  updateScoreDisplay();
-  updateTimeDisplay();
-
-  gameTimeInterval = setInterval(() => {
-    if (!gameIsRunning) return;
-    gameTime++;
-    updateTimeDisplay();
-  }, 1000);
-
-  game = new Game(canvas, ctx, {
-    radius: 20,
-    initialFilledRows: 6,
-    turnsPerDrop: 10,
-  });
-
-  // mettre la palette en cohérence au lancement
-  updateNextBubblePreview();
-
-  gameIsRunning = true;
-  pauseButton.innerHTML = '<i class="fa-solid fa-pause" style="color: #ffffff;"></i>';
-  gameLoop();
-}
-
-function stopGame() {
-  gameIsRunning = false;
-  if (gameTimeInterval) clearInterval(gameTimeInterval);
-  gameTimeInterval = null;
-}
+gameOverModal?.querySelector(".modal-overlay")?.addEventListener("click", closeGameOverModal);
 
 // --- HUD ---
 function updateScoreDisplay() {
@@ -183,32 +148,70 @@ function updateTimeDisplay() {
   timeDisplay.textContent = `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
+// --- PREVIEW (affiche la SUIVANTE) ---
+function updateNextBubblePreview() {
+  if (!game) return;
+
+  const hex = game.nextColor; // SUIVANTE
+  const name = COLOR_HEX_TO_NAME[hex];
+  if (!name) return;
+
+  colorButtons.forEach((btn) => {
+    btn.classList.toggle("selected", btn.dataset.color === name);
+  });
+}
+
+// --- INIT ---
+function initializeGame() {
+  // ferme modal si ouvert
+  closeGameOverModal();
+
+  // reset
+  stopGame();
+  gameScore = 0;
+  gameTime = 0;
+  updateScoreDisplay();
+  updateTimeDisplay();
+
+  // instanciation moteur
+  game = new Game(canvas, ctx, {
+    radius: 20,
+    initialFilledRows: 6,
+    turnsPerDrop: 10,
+  });
+
+  // preview
+  updateNextBubblePreview();
+
+  // timer
+  gameIsRunning = true;
+  gameTimeInterval = setInterval(() => {
+    if (!gameIsRunning) return;
+    gameTime++;
+    updateTimeDisplay();
+  }, 1000);
+
+  pauseButton.innerHTML = '<i class="fa-solid fa-pause" style="color: #ffffff;"></i>';
+  gameLoop();
+}
+
 // --- LOOP ---
 function update() {
   if (!gameIsRunning || !game) return;
 
   const { removed, fallen } = game.update();
 
-  if (removed > 0) {
-    gameScore += removed * 10;
-  }
-  if (fallen > 0) {
-    // bonus chute (tu peux ajuster)
-    gameScore += fallen * 20;
-  }
+  if (removed > 0) gameScore += removed * 10;
+  if (fallen > 0) gameScore += fallen * 20;
+
   if (removed > 0 || fallen > 0) updateScoreDisplay();
 
   updateNextBubblePreview();
 
   // fin de partie
   if (game.isOver) {
-    gameIsRunning = false;
-    if (game.isWin) {
-      // tu peux remplacer par une vraie modal
-      setTimeout(() => alert("🎉 Victoire !"), 50);
-    } else {
-      setTimeout(() => alert("💥 Game Over !"), 50);
-    }
+    stopGame();
+    openGameOverModal();
   }
 }
 
@@ -250,12 +253,9 @@ canvas.addEventListener("click", (e) => {
   const mouseX = e.clientX - rect.left;
   const mouseY = e.clientY - rect.top;
 
-  // éviter clic en bas sur la palette
   if (mouseY > CANVAS_HEIGHT - 50) return;
 
   const angle = calculateAngle(mouseX, mouseY);
-
-  // tir avec couleur choisie
   game.shoot(angle);
 });
 
@@ -270,6 +270,7 @@ document.addEventListener("keydown", (e) => {
 
 // --- START loader ---
 setTimeout(hideLoader, 2000);
+
 
 
 

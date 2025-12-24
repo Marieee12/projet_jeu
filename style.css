@@ -666,6 +666,12 @@ body {
     display: none;
 }
 
+/* Game Over: optionnel (si tu veux différencier) */
+#gameover-modal .modal-content {
+  max-width: 520px;
+}
+
+
 @keyframes modalFadeIn {
     from {
         opacity: 0;

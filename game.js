@@ -25,6 +25,9 @@ export class Game {
     this.shooterY = options.shooterY ?? (this.canvas.height - 60);
     this.startX = this.canvas.width / 2;
 
+    // ligne de défaite visible
+    this.dangerLineY = this.shooterY - this.radius * 2;
+
     // descente
     this.turnCount = 0;
     this.turnsPerDrop = options.turnsPerDrop ?? 10;
@@ -43,10 +46,7 @@ export class Game {
     // =========================
     // FILE D’ATTENTE : current + next
     // =========================
-    // nextColor = couleur affichée en preview (la suivante)
     this.nextColor = this.getRandomColorFromExisting();
-
-    // bulle actuelle prend nextColor, puis on reroll la suivante
     this.bubble = new Bubble(this.startX, this.shooterY, this.radius, this.nextColor);
     this.nextColor = this.getRandomColorFromExisting();
   }
@@ -171,10 +171,30 @@ export class Game {
     }
   }
 
+  drawDangerLine() {
+    const y = this.dangerLineY;
+
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.setLineDash([10, 8]);
+    this.ctx.lineWidth = 3;
+    this.ctx.strokeStyle = "rgba(255,255,255,0.65)";
+    this.ctx.moveTo(0, y);
+    this.ctx.lineTo(this.canvas.width, y);
+    this.ctx.stroke();
+
+    this.ctx.setLineDash([]);
+    this.ctx.font = "12px Montserrat, sans-serif";
+    this.ctx.fillStyle = "rgba(255,255,255,0.75)";
+    this.ctx.fillText("LIMITE", 12, y - 8);
+    this.ctx.restore();
+  }
+
   draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.drawBackground();
     this.drawGrid();
+    this.drawDangerLine();
     if (this.bubble) this.bubble.draw(this.ctx);
   }
 
@@ -425,13 +445,14 @@ export class Game {
   }
 
   checkGameOverLine() {
-    // game over si une bulle atteint la zone proche du canon
-    const limitY = this.shooterY - this.radius * 2;
+    const limitY = this.dangerLineY;
 
     for (let r = 0; r < this.rows; r++) {
       for (let c = 0; c < this.cols; c++) {
         const b = this.grid[r][c];
         if (!b) continue;
+
+        // si le bas de la bulle touche/passe la ligne -> perdu
         if (b.y + b.radius >= limitY) return true;
       }
     }
@@ -499,7 +520,7 @@ export class Game {
     this.bubble.vx = 0;
     this.bubble.vy = 0;
 
-    // la bulle reset prend la "next", puis on reroll la suivante
+    // reset : prend la "next", puis reroll la suivante
     this.bubble.color = this.nextColor;
     this.nextColor = this.getRandomColorFromExisting();
   }
@@ -512,11 +533,12 @@ export class Game {
     if (!this.bubble) return;
     if (this.bubble.vx !== 0 || this.bubble.vy !== 0) return;
 
-    const speed = 7;
+    const speed = 9; // un peu plus rapide
     this.bubble.vx = Math.cos(angle) * speed;
     this.bubble.vy = Math.sin(angle) * speed;
   }
 }
+
 
 
 

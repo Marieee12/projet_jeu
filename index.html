@@ -208,6 +208,27 @@
             </button>
         </div>
     </div>
+    <!-- MODAL GAME OVER -->
+    <div id="gameover-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+
+        <div class="modal-content">
+            <h2 class="modal-title">💥 Game Over</h2>
+            <p style="text-align:center; margin-top: 8px; color:#ffffff">
+                Les bulles ont atteint la ligne limite.
+            </p>
+
+            <div style="display:flex; gap:12px; justify-content:center; margin-top:18px;">
+                <button id="restart-game" class="modal-button">
+                    🔁 Recommencer
+                </button>
+                <button id="quit-game" class="modal-button" style="opacity:0.9;">
+                    🏠 Quitter
+                </button>
+            </div>
+        </div>
+    </div>
+
 
     <script type="module" src="script.js"></script>
 </body>
