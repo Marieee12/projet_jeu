@@ -1,333 +1,276 @@
+// script.js
 import { Game } from "./game.js";
 
 // --- RÉFÉRENCES DOM ---
-const loaderScreen = document.getElementById('loader-screen');
-const landingPage = document.getElementById('landing-page');
-const gameScreen = document.getElementById('game-screen');
-const startButton = document.getElementById('start-button');
-const rulesButton = document.getElementById('rules-button');
-const pauseButton = document.getElementById('pause-button');
-const backToMenuButton = document.getElementById('back-to-menu');
-const colorButtons = document.querySelectorAll('.color-select');
-const scoreDisplay = document.getElementById('score-display');
-const timeDisplay = document.getElementById('time-display');
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const loaderScreen = document.getElementById("loader-screen");
+const landingPage = document.getElementById("landing-page");
+const gameScreen = document.getElementById("game-screen");
+const startButton = document.getElementById("start-button");
+const rulesButton = document.getElementById("rules-button");
+const pauseButton = document.getElementById("pause-button");
+const backToMenuButton = document.getElementById("back-to-menu");
+const colorButtons = document.querySelectorAll(".color-select");
+const scoreDisplay = document.getElementById("score-display");
+const timeDisplay = document.getElementById("time-display");
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-// Modal références
-const rulesModal = document.getElementById('rules-modal');
-const closeModalButton = document.getElementById('close-rules-modal');
-const startFromModalButton = document.getElementById('start-from-modal');
+// Modal
+const rulesModal = document.getElementById("rules-modal");
+const closeModalButton = document.getElementById("close-rules-modal");
+const startFromModalButton = document.getElementById("start-from-modal");
 
-// --- VARIABLES DE JEU ---
+// --- VARIABLES ---
 let game = null;
-let selectedColor = '#4dff4d'; 
 let gameScore = 0;
 let gameTime = 0;
 let gameTimeInterval = null;
-
-// Constantes pour la grille et les bulles
-const BUBBLE_RADIUS = 20;
-const CANVAS_WIDTH = canvas.width;
-const CANVAS_HEIGHT = canvas.height;
-const COLORS = ['#ff4d4d', '#4d94ff', '#4dff4d', '#ffff4d'];
-
-// mapping hex -> nom (data-color des boutons)
-const COLOR_HEX_TO_NAME = {
-    '#ff4d4d': 'red',
-    '#4d94ff': 'blue',
-    '#4dff4d': 'green',
-    '#ffff4d': 'yellow',
-};
-
-// initialisation de la grille de bulles
-let bubblesGrid = []; 
-let currentShotBubble = null;
 let gameIsRunning = false;
 
-// --- GESTION DES ÉCRANS ---
+const CANVAS_WIDTH = canvas.width;
+const CANVAS_HEIGHT = canvas.height;
 
-/** Masque le loader et affiche la page d'accueil après un délai simulé. */
+// Palette : data-color = red/blue/green/yellow -> hex
+const COLOR_NAME_TO_HEX = {
+  red: "#ff4d4d",
+  blue: "#4d94ff",
+  green: "#4dff4d",
+  yellow: "#ffff4d",
+};
+
+const COLOR_HEX_TO_NAME = {
+  "#ff4d4d": "red",
+  "#4d94ff": "blue",
+  "#4dff4d": "green",
+  "#ffff4d": "yellow",
+};
+
+let selectedColorHex = "#4dff4d"; // défaut
+
+// --- UI SCREENS ---
 function hideLoader() {
-    loaderScreen.classList.add('hidden');
-    landingPage.classList.remove('hidden');
-    
-    // Animer les panneaux latéraux
-    setTimeout(() => {
-        document.querySelector('.panel-left').style.opacity = '1';
-        document.querySelector('.panel-right').style.opacity = '1';
-    }, 100);
+  loaderScreen.classList.add("hidden");
+  landingPage.classList.remove("hidden");
+
+  setTimeout(() => {
+    const left = document.querySelector(".panel-left");
+    const right = document.querySelector(".panel-right");
+    if (left) left.style.opacity = "1";
+    if (right) right.style.opacity = "1";
+  }, 100);
 }
 
-/** Démarre le jeu et passe à l'écran du Canvas. */
-startButton.addEventListener('click', () => {
-    landingPage.classList.add('hidden');
-    gameScreen.classList.remove('hidden');
-    initializeGame();
-});
-
-/** Bouton retour au menu */
-if (backToMenuButton) {
-    backToMenuButton.addEventListener('click', () => {
-        gameIsRunning = false;
-        if (gameTimeInterval) clearInterval(gameTimeInterval);
-        gameScreen.classList.add('hidden');
-        landingPage.classList.remove('hidden');
-    });
-}
-
-/** Bouton pause */
-if (pauseButton) {
-    pauseButton.addEventListener('click', () => {
-        gameIsRunning = !gameIsRunning;
-        pauseButton.innerHTML = gameIsRunning ? '<i class="fa-solid fa-pause" style="color: #ffffff;"></i>' : '<i class="fa-solid fa-play" style="color: #ffffff;"></i>';
-        if (gameIsRunning) {
-            gameLoop();
-        }
-    });
-}
-
-/** Bouton règles - Ouvre le modal */
-if (rulesButton) {
-    rulesButton.addEventListener('click', () => {
-        rulesModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden'; // Empêche le scroll
-    });
-}
-
-/** Fermer le modal */
-if (closeModalButton) {
-    closeModalButton.addEventListener('click', closeRulesModal);
-}
-
-/** Fermer le modal en cliquant sur l'overlay */
-if (rulesModal) {
-    const overlay = rulesModal.querySelector('.modal-overlay');
-    if (overlay) {
-        overlay.addEventListener('click', closeRulesModal);
-    }
-}
-
-/** Fonction pour fermer le modal */
 function closeRulesModal() {
-    rulesModal.classList.add('hidden');
-    document.body.style.overflow = 'auto'; // Réactive le scroll
+  rulesModal.classList.add("hidden");
+  document.body.style.overflow = "auto";
 }
 
-/** Démarrer le jeu depuis le modal */
-if (startFromModalButton) {
-    startFromModalButton.addEventListener('click', () => {
-        closeRulesModal();
-        landingPage.classList.add('hidden');
-        gameScreen.classList.remove('hidden');
-        initializeGame();
-    });
-}
+startButton?.addEventListener("click", () => {
+  landingPage.classList.add("hidden");
+  gameScreen.classList.remove("hidden");
+  initializeGame();
+});
 
-/** Fermer le modal avec la touche Echap */
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !rulesModal.classList.contains('hidden')) {
-        closeRulesModal();
+backToMenuButton?.addEventListener("click", () => {
+  stopGame();
+  gameScreen.classList.add("hidden");
+  landingPage.classList.remove("hidden");
+});
+
+pauseButton?.addEventListener("click", () => {
+  gameIsRunning = !gameIsRunning;
+  pauseButton.innerHTML = gameIsRunning
+    ? '<i class="fa-solid fa-pause" style="color: #ffffff;"></i>'
+    : '<i class="fa-solid fa-play" style="color: #ffffff;"></i>';
+
+  if (gameIsRunning) gameLoop();
+});
+
+rulesButton?.addEventListener("click", () => {
+  rulesModal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+});
+
+closeModalButton?.addEventListener("click", closeRulesModal);
+
+rulesModal?.querySelector(".modal-overlay")?.addEventListener("click", closeRulesModal);
+
+startFromModalButton?.addEventListener("click", () => {
+  closeRulesModal();
+  landingPage.classList.add("hidden");
+  gameScreen.classList.remove("hidden");
+  initializeGame();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && rulesModal && !rulesModal.classList.contains("hidden")) {
+    closeRulesModal();
+  }
+});
+
+// --- PALETTE ---
+colorButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const name = btn.dataset.color; // red/blue/green/yellow
+    if (name && COLOR_NAME_TO_HEX[name]) {
+      selectedColorHex = COLOR_NAME_TO_HEX[name];
     }
+
+    // feedback visuel : selected
+    colorButtons.forEach((b) => b.classList.remove("selected"));
+    btn.classList.add("selected");
+  });
 });
 
-
-// --- CHOIX DE COULEUR PAR L'UTILISATEUR ---
-
-colorButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        // Mettre à jour la couleur sélectionnée
-        selectedColor = button.getAttribute('data-color');
-        
-        // Mettre à jour le feedback visuel (bordure or pour la couleur sélectionnée)
-        colorButtons.forEach(btn => btn.classList.remove('selected'));
-        button.classList.add('selected');
-    });
-});
-
-
-// --- LOGIQUE DU JEU ---
-
-/** Met à jour l'affichage "Prochaine balle" dans la palette 
- * en fonction de la couleur de la bulle prête à être tirée (game.bubble.color).
- */
 function updateNextBubblePreview() {
-    if (!game || !game.bubble) return;
+  if (!game) return;
 
-    const currentHex = game.bubble.color;
-    const colorName = COLOR_HEX_TO_NAME[currentHex] || null;
+  // on affiche la couleur SUIVANTE (preview)
+  const hex = game.nextColor;
+  const name = COLOR_HEX_TO_NAME[hex];
 
-    colorButtons.forEach(btn => {
-        const btnColorName = btn.getAttribute('data-color');
-        if (colorName && btnColorName === colorName) {
-            btn.classList.add('selected');
-        } else {
-            btn.classList.remove('selected');
-        }
-    });
+  if (!name) return;
+
+  colorButtons.forEach((btn) => {
+    btn.classList.toggle("selected", btn.dataset.color === name);
+  });
 }
 
-/** Initialise la grille, le canon et lance la boucle de jeu. */
+
+// --- GAME INIT / STOP ---
 function initializeGame() {
-    gameScore = 0;
-    gameTime = 0;
-    updateScoreDisplay();
-    
-    // Démarrer le chronomètre
-    if (gameTimeInterval) clearInterval(gameTimeInterval);
-    gameTimeInterval = setInterval(() => {
-        gameTime++;
-        updateTimeDisplay();
-    }, 1000);
+  stopGame(); // nettoie si on relance
 
-    // instanciation de ton moteur de jeu
-    game = new Game(canvas, ctx, {
-        radius: 20,
-    });
+  gameScore = 0;
+  gameTime = 0;
+  updateScoreDisplay();
+  updateTimeDisplay();
 
-    // On synchronise la palette avec la couleur de la bulle prête à être tirée
-    updateNextBubblePreview();
+  gameTimeInterval = setInterval(() => {
+    if (!gameIsRunning) return;
+    gameTime++;
+    updateTimeDisplay();
+  }, 1000);
 
-    gameIsRunning = true;
-    gameLoop();
+  game = new Game(canvas, ctx, {
+    radius: 20,
+    initialFilledRows: 6,
+    turnsPerDrop: 10,
+  });
+
+  // mettre la palette en cohérence au lancement
+  updateNextBubblePreview();
+
+  gameIsRunning = true;
+  pauseButton.innerHTML = '<i class="fa-solid fa-pause" style="color: #ffffff;"></i>';
+  gameLoop();
 }
 
-/** Met à jour l'affichage du score. */
+function stopGame() {
+  gameIsRunning = false;
+  if (gameTimeInterval) clearInterval(gameTimeInterval);
+  gameTimeInterval = null;
+}
+
+// --- HUD ---
 function updateScoreDisplay() {
-    scoreDisplay.textContent = gameScore;
+  scoreDisplay.textContent = String(gameScore);
 }
 
-/** Met à jour l'affichage du temps. */
 function updateTimeDisplay() {
-    const minutes = Math.floor(gameTime / 60);
-    const seconds = gameTime % 60;
-    timeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  const minutes = Math.floor(gameTime / 60);
+  const seconds = gameTime % 60;
+  timeDisplay.textContent = `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-/** Logique de mise à jour (mouvement, collisions, match-3). */
+// --- LOOP ---
 function update() {
-    if (!gameIsRunning || !game) return;
+  if (!gameIsRunning || !game) return;
 
-    const removed = game.update();
-    if (removed > 0) {
-        gameScore += removed * 10;
-        updateScoreDisplay();
+  const { removed, fallen } = game.update();
+
+  if (removed > 0) {
+    gameScore += removed * 10;
+  }
+  if (fallen > 0) {
+    // bonus chute (tu peux ajuster)
+    gameScore += fallen * 20;
+  }
+  if (removed > 0 || fallen > 0) updateScoreDisplay();
+
+  updateNextBubblePreview();
+
+  // fin de partie
+  if (game.isOver) {
+    gameIsRunning = false;
+    if (game.isWin) {
+      // tu peux remplacer par une vraie modal
+      setTimeout(() => alert("🎉 Victoire !"), 50);
+    } else {
+      setTimeout(() => alert("💥 Game Over !"), 50);
     }
-
-    // À chaque frame on met à jour la "Prochaine balle" d'après game.bubble.color
-    updateNextBubblePreview();
+  }
 }
 
-/** Dessine tous les éléments sur le Canvas. */
 function draw() {
-    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    if (game) {
-        game.draw();
-    }
+  ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  if (game) game.draw();
 }
 
-/** La boucle principale du jeu. */
 function gameLoop() {
-    update();
-    draw();
-
-    if (gameIsRunning) {
-        requestAnimationFrame(gameLoop);
-    }
+  update();
+  draw();
+  if (gameIsRunning) requestAnimationFrame(gameLoop);
 }
 
-// --- GESTION DU TIR ---
-
-/** Calcule l'angle entre le canon et la position de la souris. */
+// --- AIM + SHOOT ---
 function calculateAngle(mouseX, mouseY) {
-    const cannonX = game ? game.startX : CANVAS_WIDTH / 2;
-    const cannonY = game ? game.shooterY : CANVAS_HEIGHT - BUBBLE_RADIUS * 2; // Position du canon
-    
-    const dx = mouseX - cannonX;
-    const dy = mouseY - cannonY;
-    
-    // Math.atan2 retourne l'angle en radians
-    let angle = Math.atan2(dy, dx);
-    
-    // Limiter l'angle pour ne pas tirer vers le bas (entre -165° et -15°)
-    const minAngle = (-160 * Math.PI) / 180; // 165 degrés
-    const maxAngle = (-20 * Math.PI) / 180;  // -15 degrés
-    
-    // Inverser l'angle pour travailler dans le repère du Canvas (angle par rapport à l'horizontale positive)
-    // Mais pour le tir, nous nous intéressons seulement à l'orientation du canon.
-    if (angle < minAngle) angle = minAngle;
-    if (angle > maxAngle) angle = maxAngle;
+  const cannonX = game ? game.startX : CANVAS_WIDTH / 2;
+  const cannonY = game ? game.shooterY : CANVAS_HEIGHT - 60;
 
-    return angle;
+  const dx = mouseX - cannonX;
+  const dy = mouseY - cannonY;
+
+  let angle = Math.atan2(dy, dx);
+
+  // limiter : ne pas tirer vers le bas
+  const minAngle = (-160 * Math.PI) / 180;
+  const maxAngle = (-20 * Math.PI) / 180;
+
+  if (angle < minAngle) angle = minAngle;
+  if (angle > maxAngle) angle = maxAngle;
+
+  return angle;
 }
 
+canvas.addEventListener("click", (e) => {
+  if (!gameIsRunning || !game) return;
 
-/** Déclenche le tir lors du clic sur le Canvas. */
-// canvas.addEventListener('click', (e) => {
-//     if (!gameIsRunning || !game) return;
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
 
-//     const rect = canvas.getBoundingClientRect();
-//     const mouseX = e.clientX - rect.left;
-//     const mouseY = e.clientY - rect.top;
-    
-//     // On ne tire que dans la zone supérieure pour ne pas cliquer sur la palette
-//     if (mouseY > CANVAS_HEIGHT - 50) return; 
+  // éviter clic en bas sur la palette
+  if (mouseY > CANVAS_HEIGHT - 50) return;
 
-//     const angle = calculateAngle(mouseX, mouseY);
+  const angle = calculateAngle(mouseX, mouseY);
 
-//     // utilisation de ton moteur de jeu
-//     game.shoot(angle, selectedColor);
-// });
-
-canvas.addEventListener('click', (e) => {
-    if (!gameIsRunning || !game) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    
-    // On ne tire que dans la zone supérieure pour ne pas cliquer sur la palette
-    if (mouseY > CANVAS_HEIGHT - 50) return; 
-
-    const angle = calculateAngle(mouseX, mouseY);
-
-    // utilisation de ton moteur de jeu
-    game.shoot(angle, selectedColor);
+  // tir avec couleur choisie
+  game.shoot(angle);
 });
 
-/** Crée et lance la bulle. */
-function shootBubble(angle) {
-    const speed = 10;
-    
-    // Vitesse Y doit être négative pour monter !
-    // L'angle est calculé en bas/gauche/droite par rapport au canon.
-    
-    currentShotBubble = {
-        x: CANVAS_WIDTH / 2,
-        y: CANVAS_HEIGHT - BUBBLE_RADIUS * 2,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        color: selectedColor,
-        radius: BUBBLE_RADIUS,
-    };
-}
+document.addEventListener("keydown", (e) => {
+  if (!gameIsRunning || !game) return;
 
+  if (e.code === "Space" || e.code === "ArrowUp") {
+    const angle = -Math.PI / 2;
+    game.shoot(angle);
+  }
+});
 
-// --- DÉMARRAGE (après le loader) ---
+// --- START loader ---
 setTimeout(hideLoader, 2000);
 
-document.addEventListener('keydown', (e) => {
-    // On ne tire que si le jeu tourne et que le canvas est affiché
-    if (!gameIsRunning || !game) return;
-
-    if (e.code === 'Space' || e.code === 'ArrowUp') {
-        // Tir tout droit vers le haut
-        const angle = -Math.PI / 2; // -90° en radians
-
-        // Ton moteur de jeu gère déjà angle + couleur
-        game.shoot(angle, selectedColor);
-    }
-});
 
 
 
