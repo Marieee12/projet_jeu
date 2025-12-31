@@ -1,0 +1,106 @@
+// leaderboard/leaderboard.js
+const LS_LEADERBOARD = "bubbleShooter.leaderboard";
+
+export function formatTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function seedLeaderboardFromLandingTable() {
+  const rows = document.querySelectorAll("#leaderboard tbody tr");
+  const data = [];
+
+  rows.forEach((tr) => {
+    const tds = tr.querySelectorAll("td");
+    if (tds.length < 3) return;
+
+    const pseudo = (tds[1]?.textContent || "").trim();
+    const score = parseInt((tds[2]?.textContent || "0").trim(), 10) || 0;
+
+    data.push({ pseudo, score, timeSec: null, createdAt: Date.now() });
+  });
+
+  return data;
+}
+
+function saveLeaderboard(lb) {
+  localStorage.setItem(LS_LEADERBOARD, JSON.stringify(lb));
+}
+
+function loadLeaderboard() {
+  const raw = localStorage.getItem(LS_LEADERBOARD);
+  if (raw) {
+    try {
+      return JSON.parse(raw);
+    } catch {}
+  }
+  const seeded = seedLeaderboardFromLandingTable();
+  saveLeaderboard(seeded);
+  return seeded;
+}
+
+function sortLeaderboard(lb) {
+  return lb.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    const at = a.timeSec ?? Number.POSITIVE_INFINITY;
+    const bt = b.timeSec ?? Number.POSITIVE_INFINITY;
+    return at - bt;
+  });
+}
+
+export function recordWinAndGetRank({ pseudo, score, timeSec }) {
+  const lb = loadLeaderboard();
+  const entry = { pseudo, score, timeSec, createdAt: Date.now() };
+
+  lb.push(entry);
+  sortLeaderboard(lb);
+
+  const trimmed = lb.slice(0, 200);
+  saveLeaderboard(trimmed);
+
+  const idx = trimmed.findIndex(
+    (x) =>
+      x.pseudo === entry.pseudo &&
+      x.score === entry.score &&
+      x.timeSec === entry.timeSec &&
+      x.createdAt === entry.createdAt
+  );
+
+  return { lb: trimmed, index: idx === -1 ? 0 : idx };
+}
+
+export function renderWinLeaderboardCentered(dom, lb, playerIndex) {
+  if (!dom.winTbody) return;
+
+  const windowSize = 9;
+  const half = Math.floor(windowSize / 2);
+  const start = Math.max(0, playerIndex - half);
+  const end = Math.min(lb.length, start + windowSize);
+  const slice = lb.slice(start, end);
+
+  dom.winTbody.innerHTML = "";
+
+  slice.forEach((row, i) => {
+    const absoluteRank = start + i + 1;
+    const tr = document.createElement("tr");
+
+    if (start + i === playerIndex) {
+      tr.classList.add("win-player-row");
+      tr.dataset.playerRow = "1";
+    }
+
+    const timeText = row.timeSec == null ? "-" : formatTime(row.timeSec);
+
+    tr.innerHTML = `
+      <td style="padding:10px 12px; color:#ffffff;">${absoluteRank}</td>
+      <td style="padding:10px 12px; color:#ffffff;">${row.pseudo}</td>
+      <td style="padding:10px 12px; color:#ffffff; text-align:right;">${row.score}</td>
+      <td style="padding:10px 12px; color:#ffffff; text-align:right;">${timeText}</td>
+    `;
+    dom.winTbody.appendChild(tr);
+  });
+
+  const playerRow = dom.winTbody.querySelector('tr[data-player-row="1"]');
+  if (playerRow) playerRow.scrollIntoView({ block: "center" });
+}
