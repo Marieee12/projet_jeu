@@ -1,156 +1,163 @@
-// game/loop.js
 import { Game } from "./game.js";
-import { getPlayerName } from "../player/session.js";
-import { formatTime, recordWinAndGetRank, renderWinLeaderboardCentered } from "../leaderboard/leaderboard.js";
-
-const COLOR_HEX_TO_NAME = {
-  "#ff4d4d": "red",
-  "#4d94ff": "blue",
-  "#4dff4d": "green",
-  "#ffff4d": "yellow",
-};
+import { loadLevel } from "../levels/loader-levels.js";
+import { showLevelIntro } from "../ui/levelIntro.js";
 
 export function createGameController(dom, modals) {
-  let game = null;
-  let gameScore = 0;
-  let gameTime = 0;
-  let gameTimeInterval = null;
-  let gameIsRunning = false;
+  const { canvas, ctx, scoreDisplay, timeDisplay, pauseButton } = dom;
 
-  const CANVAS_WIDTH = dom.canvas.width;
-  const CANVAS_HEIGHT = dom.canvas.height;
+  let game = null;
+  let running = false;
+  let levelId = 1;
+
+  // SCORE / TIME
+  let score = 0;
+  let timeSec = 0;
+  let timerId = null;
+
+  // ✅ session-only : niveaux déjà “annoncés”
+  const seenLevelIntro = new Set();
+
+  async function startLevel(id, { showIntro = true } = {}) {
+    levelId = id;
+
+    const levelConfig = await loadLevel(levelId);
+
+    // ✅ intro seulement la 1ère fois du niveau, et seulement si showIntro=true
+    if (showIntro && !seenLevelIntro.has(levelId)) {
+      seenLevelIntro.add(levelId);
+      await showLevelIntro(dom, { levelName: levelConfig.name, durationMs: 1300 });
+    }
+
+    game = new Game(canvas, ctx, levelConfig);
+    running = true;
+  }
 
   function stopGame() {
-    gameIsRunning = false;
-    if (gameTimeInterval) clearInterval(gameTimeInterval);
-    gameTimeInterval = null;
+    running = false;
+    if (timerId) clearInterval(timerId);
+    timerId = null;
   }
 
-  function updateScoreDisplay() {
-    dom.scoreDisplay.textContent = String(gameScore);
-  }
-  function updateTimeDisplay() {
-    dom.timeDisplay.textContent = formatTime(gameTime);
-  }
-
-  function updateNextBubblePreview() {
-    if (!game) return;
-    const hex = game.nextColor;
-    const name = COLOR_HEX_TO_NAME[hex];
-    if (!name) return;
-
-    dom.colorButtons.forEach((btn) => {
-      btn.classList.toggle("selected", btn.dataset.color === name);
-    });
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${String(s).padStart(2, "0")}`;
   }
 
-  function initializeGame() {
-    modals.closeGameOver?.();
-    modals.closeWin?.();
+  function updateHUD() {
+    if (scoreDisplay) scoreDisplay.textContent = String(score);
+    if (timeDisplay) timeDisplay.textContent = formatTime(timeSec);
+  }
 
+  async function initializeGame({ showIntro = true } = {}) {
     stopGame();
-    gameScore = 0;
-    gameTime = 0;
-    updateScoreDisplay();
-    updateTimeDisplay();
+    score = 0;
+    timeSec = 0;
+    updateHUD();
 
-    game = new Game(dom.canvas, dom.ctx, { radius: 20, initialFilledRows: 6, turnsPerDrop: 10 });
-    updateNextBubblePreview();
+    // niveau 1 par défaut
+    await startLevel(1, { showIntro });
 
-    gameIsRunning = true;
-    gameTimeInterval = setInterval(() => {
-      if (!gameIsRunning) return;
-      gameTime++;
-      updateTimeDisplay();
+    timerId = setInterval(() => {
+      if (!running) return;
+      timeSec++;
+      updateHUD();
     }, 1000);
 
-    dom.pauseButton.innerHTML = '<i class="fa-solid fa-pause" style="color: #ffffff;"></i>';
+    if (pauseButton) {
+      pauseButton.innerHTML = '<i class="fa-solid fa-pause" style="color: #ffffff;"></i>';
+    }
+
     gameLoop();
   }
 
   function update() {
-    if (!gameIsRunning || !game) return;
+    if (!running || !game) return;
 
-    const { removed, fallen } = game.update();
+    const res = game.update(); // { removed, fallen, starBonus }
 
-    if (removed > 0) gameScore += removed * 10;
-    if (fallen > 0) gameScore += fallen * 20;
-    if (removed > 0 || fallen > 0) updateScoreDisplay();
+    const scoring = game.level?.scoring ?? {
+      matchBubble: 10,
+      fallenBubble: 20,
+      starBonusDefault: 500,
+    };
 
-    updateNextBubblePreview();
+    if (res.removed > 0) score += res.removed * scoring.matchBubble;
+    if (res.fallen > 0) score += res.fallen * scoring.fallenBubble;
+    if (res.starBonus > 0) score += res.starBonus;
+
+    if (res.removed > 0 || res.fallen > 0 || res.starBonus > 0) updateHUD();
 
     if (game.isOver) {
       stopGame();
 
       if (game.isWin) {
-        const pseudo = getPlayerName() || "Joueur";
-
-        dom.winPlayerEl && (dom.winPlayerEl.textContent = pseudo);
-        dom.winScoreEl && (dom.winScoreEl.textContent = String(gameScore));
-        dom.winTimeEl && (dom.winTimeEl.textContent = formatTime(gameTime));
-
-        const { lb, index } = recordWinAndGetRank({ pseudo, score: gameScore, timeSec: gameTime });
-        dom.winRankEl && (dom.winRankEl.textContent = `#${index + 1}`);
-        renderWinLeaderboardCentered(dom, lb, index);
-
-        modals.openWin();
+        modals?.openWinModal?.({ score, timeSec });
       } else {
-        modals.openGameOver();
+        modals?.openGameOverModal?.();
       }
     }
   }
 
   function draw() {
-    dom.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    game?.draw();
+    if (game) game.draw();
   }
 
   function gameLoop() {
     update();
     draw();
-    if (gameIsRunning) requestAnimationFrame(gameLoop);
+    if (running) requestAnimationFrame(gameLoop);
+  }
+
+  function shoot(angle) {
+    if (!running || !game) return;
+    game.shoot(angle);
   }
 
   function calculateAngle(mouseX, mouseY) {
-    const cannonX = game ? game.startX : CANVAS_WIDTH / 2;
-    const cannonY = game ? game.shooterY : CANVAS_HEIGHT - 60;
+    const cannonX = game ? game.startX : canvas.width / 2;
+    const cannonY = game ? game.shooterY : canvas.height - 60;
 
     const dx = mouseX - cannonX;
     const dy = mouseY - cannonY;
 
     let angle = Math.atan2(dy, dx);
+
     const minAngle = (-160 * Math.PI) / 180;
     const maxAngle = (-20 * Math.PI) / 180;
+
     if (angle < minAngle) angle = minAngle;
     if (angle > maxAngle) angle = maxAngle;
+
     return angle;
   }
 
   function bindInputs() {
-    dom.canvas.addEventListener("click", (e) => {
-      if (!gameIsRunning || !game) return;
+    canvas?.addEventListener("click", (e) => {
+      if (!running || !game) return;
 
-      const rect = dom.canvas.getBoundingClientRect();
+      const rect = canvas.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
 
-      if (mouseY > CANVAS_HEIGHT - 50) return;
+      if (mouseY > canvas.height - 50) return;
 
       const angle = calculateAngle(mouseX, mouseY);
-      game.shoot(angle);
+      shoot(angle);
     });
 
     document.addEventListener("keydown", (e) => {
-      if (!gameIsRunning || !game) return;
-      if (e.code === "Space" || e.code === "ArrowUp") game.shoot(-Math.PI / 2);
+      if (!running || !game) return;
+      if (e.code === "Space" || e.code === "ArrowUp") shoot(-Math.PI / 2);
     });
 
     dom.pauseButton?.addEventListener("click", () => {
-      gameIsRunning = !gameIsRunning;
-      dom.pauseButton.innerHTML = gameIsRunning
+      running = !running;
+      dom.pauseButton.innerHTML = running
         ? '<i class="fa-solid fa-pause" style="color: #ffffff;"></i>'
         : '<i class="fa-solid fa-play" style="color: #ffffff;"></i>';
-      if (gameIsRunning) gameLoop();
+
+      if (running) gameLoop();
     });
 
     dom.backToMenuButton?.addEventListener("click", () => {
@@ -162,7 +169,16 @@ export function createGameController(dom, modals) {
 
   return {
     initializeGame,
+    startLevel, // (utile plus tard si tu enchaînes niveau 2/3)
     stopGame,
     bindInputs,
+    getGame: () => game,
+    getScore: () => score,
+    getTimeSec: () => timeSec,
+    isRunning: () => running,
   };
 }
+
+
+
+

@@ -25,13 +25,13 @@ const modals = bindModals(dom, {
     dom.gameScreen.classList.remove("hidden");
     gameController.initializeGame();
   },
-  onRestart: () => gameController.initializeGame(),
+  onRestart: () => gameController.initializeGame({ showIntro: false }),
   onQuit: () => {
     gameController.stopGame();
     dom.gameScreen.classList.add("hidden");
     dom.landingPage.classList.remove("hidden");
   },
-  onWinRestart: () => gameController.initializeGame(),
+  onWinRestart: () => gameController.initializeGame({ showIntro: false }),
   onWinQuit: () => {
     gameController.stopGame();
     dom.gameScreen.classList.add("hidden");

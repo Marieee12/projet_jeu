@@ -29,16 +29,20 @@ function saveLeaderboard(lb) {
 }
 
 function loadLeaderboard() {
-  const raw = localStorage.getItem(LS_LEADERBOARD);
+  const raw = localStorage.getItem("bubbleShooter.leaderboard");
+
   if (raw) {
     try {
       return JSON.parse(raw);
     } catch {}
   }
+
+  // SEED depuis le HTML
   const seeded = seedLeaderboardFromLandingTable();
-  saveLeaderboard(seeded);
+  localStorage.setItem("bubbleShooter.leaderboard", JSON.stringify(seeded));
   return seeded;
 }
+
 
 function sortLeaderboard(lb) {
   return lb.sort((a, b) => {

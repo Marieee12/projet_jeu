@@ -3,7 +3,7 @@
   "name": "Niveau 1 — Découverte",
   "grid": {
     "rows": 14,
-    "cols": 10,
+    "cols": 17,
     "startY": 60,
     "radius": 20
   },
