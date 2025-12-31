@@ -80,13 +80,41 @@
             <p class="slogan">Visez. Tirez. Explosez.</p>
 
             <div id="main-buttons">
-                <button id="start-button" class="btn-primary">
+                <!-- PSEUDO -->
+                <div id="player-box" style="margin-top:16px;">
+                    <input id="player-input" type="text" placeholder="Ton pseudo…" maxlength="16" style="
+        padding:12px 16px;
+        border-radius:16px;
+        border:none;
+        outline:none;
+        width:240px;
+        text-align:center;
+        font-family: 'Montserrat', sans-serif;
+      " />
+
+                    <div style="margin-top:10px;">
+                        <button id="player-save" class="btn-primary" style="padding:10px 18px;">
+                            OK
+                        </button>
+                        <button id="player-change" class="btn-secondary hidden" style="padding:10px 18px;">
+                            Changer
+                        </button>
+                    </div>
+
+                    <div id="player-hello" style="margin-top:10px; color:white; opacity:0.85;"></div>
+                </div>
+
+                <!-- BOUTON JOUER (caché tant que pseudo pas validé) -->
+                <button id="start-button" class="btn-primary hidden" style="margin-top:14px;">
                     <span class="btn-icon">▶</span> JOUER
                 </button>
-                <button id="rules-button" class="btn-secondary">
+
+                <!-- RÈGLES toujours visibles -->
+                <button id="rules-button" class="btn-secondary" style="margin-top:10px;">
                     <span class="btn-icon"><i class="fa-solid fa-list"></i></span> RÈGLES DU JEU
                 </button>
             </div>
+
         </div>
 
         <!-- Droite RÈGLES DU JEU -->
@@ -208,7 +236,7 @@
             </button>
         </div>
     </div>
-    <!-- MODAL GAME OVER -->
+    <!-- MODALS -->
     <div id="gameover-modal" class="modal hidden">
         <div class="modal-overlay"></div>
 
@@ -225,6 +253,25 @@
                 <button id="quit-game" class="modal-button" style="opacity:0.9;">
                     🏠 Quitter
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="win-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+
+        <div class="modal-content" style="max-width: 560px;">
+            <h2 class="modal-title">🏆 Victoire !</h2>
+
+            <p style="text-align:center; margin-top:10px;">
+                Score : <strong id="win-score">0</strong>
+                <br />
+                Temps : <strong id="win-time">0:00</strong>
+            </p>
+
+            <div style="display:flex; gap:12px; justify-content:center; margin-top:18px; flex-wrap:wrap;">
+                <button id="win-restart" class="modal-button">🔁 Rejouer</button>
+                <button id="win-quit" class="modal-button" style="opacity:0.9;">🏠 Quitter</button>
             </div>
         </div>
     </div>

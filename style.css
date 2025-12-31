@@ -671,6 +671,9 @@ body {
   max-width: 520px;
 }
 
+#win-modal p {
+    color: #ffffff;
+}
 
 @keyframes modalFadeIn {
     from {

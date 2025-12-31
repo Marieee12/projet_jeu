@@ -25,6 +25,13 @@ const gameOverModal = document.getElementById("gameover-modal");
 const restartGameBtn = document.getElementById("restart-game");
 const quitGameBtn = document.getElementById("quit-game");
 
+// Modal win
+const winModal = document.getElementById("win-modal");
+const winScoreEl = document.getElementById("win-score");
+const winTimeEl = document.getElementById("win-time");
+const winRestartBtn = document.getElementById("win-restart");
+const winQuitBtn = document.getElementById("win-quit");
+
 // --- VARIABLES ---
 let game = null;
 let gameScore = 0;
@@ -43,6 +50,114 @@ const COLOR_HEX_TO_NAME = {
   "#ffff4d": "yellow",
 };
 
+// PLAYER PSEUDO
+const playerInput = document.getElementById("player-input");
+const playerSave = document.getElementById("player-save");
+const playerChange = document.getElementById("player-change");
+const playerHello = document.getElementById("player-hello");
+
+
+// PLAYER SESSION
+const LS_PLAYER = "bubbleShooter.playerName";
+
+function getPlayerName() {
+  return localStorage.getItem(LS_PLAYER) || "";
+}
+
+function setPlayerName(name) {
+  localStorage.setItem(LS_PLAYER, name.trim());
+}
+
+function clearPlayerName() {
+  localStorage.removeItem(LS_PLAYER);
+}
+
+function refreshPlayerUI() {
+  const name = getPlayerName();
+
+  if (!name) {
+    // pas de pseudo => on montre input + OK, on cache JOUER
+    if (playerHello) playerHello.textContent = "Choisis un pseudo pour jouer.";
+    playerInput?.classList.remove("hidden");
+    playerSave?.classList.remove("hidden");
+    playerChange?.classList.add("hidden");
+    startButton?.classList.add("hidden");
+  } else {
+    // pseudo ok => on cache input, on montre JOUER
+    if (playerHello) playerHello.textContent = `Salut, ${name} 👋`;
+    playerInput?.classList.add("hidden");
+    playerSave?.classList.add("hidden");
+    playerChange?.classList.remove("hidden");
+    startButton?.classList.remove("hidden");
+  }
+}
+
+playerSave?.addEventListener("click", () => {
+  const v = (playerInput?.value || "").trim();
+  if (v.length < 2) {
+    if (playerHello) playerHello.textContent = "Pseudo trop court 🙂 (min 2 caractères)";
+    return;
+  }
+  setPlayerName(v);
+  refreshPlayerUI();
+});
+
+playerInput?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") playerSave?.click();
+});
+
+playerChange?.addEventListener("click", () => {
+  clearPlayerName();
+  if (playerInput) playerInput.value = "";
+  refreshPlayerUI();
+});
+
+
+// LEADERBOARD
+const LS_LEADERBOARD = "bubbleShooter.leaderboard";
+
+// Lit le tableau HTML existant (fake) et le convertit en JSON
+function seedLeaderboardFromLandingTable() {
+  const rows = document.querySelectorAll("#leaderboard tbody tr");
+  const data = [];
+
+  rows.forEach((tr) => {
+    const tds = tr.querySelectorAll("td");
+    if (tds.length < 3) return;
+
+    const pseudo = (tds[1]?.textContent || "").trim();
+    const score = parseInt((tds[2]?.textContent || "0").trim(), 10) || 0;
+
+    data.push({
+      pseudo,
+      score,
+      timeSec: null, // les fake n'ont pas forcément le temps
+      createdAt: Date.now(),
+    });
+  });
+
+  return data;
+}
+
+function loadLeaderboard() {
+  const raw = localStorage.getItem(LS_LEADERBOARD);
+  if (raw) {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      // si corrompu, on repart de la seed
+    }
+  }
+  const seeded = seedLeaderboardFromLandingTable();
+  saveLeaderboard(seeded);
+  return seeded;
+}
+
+function saveLeaderboard(lb) {
+  localStorage.setItem(LS_LEADERBOARD, JSON.stringify(lb));
+}
+
+
 // --- GESTION DES ÉCRANS ---
 function hideLoader() {
   loaderScreen.classList.add("hidden");
@@ -54,6 +169,7 @@ function hideLoader() {
     if (left) left.style.opacity = "1";
     if (right) right.style.opacity = "1";
   }, 100);
+  refreshPlayerUI();
 }
 
 function stopGame() {
@@ -63,10 +179,13 @@ function stopGame() {
 }
 
 startButton?.addEventListener("click", () => {
+  if (!getPlayerName()) return;
+
   landingPage.classList.add("hidden");
   gameScreen.classList.remove("hidden");
   initializeGame();
 });
+
 
 backToMenuButton?.addEventListener("click", () => {
   stopGame();
@@ -82,6 +201,12 @@ pauseButton?.addEventListener("click", () => {
 
   if (gameIsRunning) gameLoop();
 });
+
+function formatTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
 
 // --- MODAL RÈGLES ---
 rulesButton?.addEventListener("click", () => {
@@ -137,6 +262,20 @@ quitGameBtn?.addEventListener("click", () => {
 
 gameOverModal?.querySelector(".modal-overlay")?.addEventListener("click", closeGameOverModal);
 
+// Modal win
+function openWinModal() {
+  if (!winModal) return;
+  winModal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function closeWinModal() {
+  if (!winModal) return;
+  winModal.classList.add("hidden");
+  document.body.style.overflow = "auto";
+}
+
+
 // --- HUD ---
 function updateScoreDisplay() {
   scoreDisplay.textContent = String(gameScore);
@@ -165,6 +304,7 @@ function updateNextBubblePreview() {
 function initializeGame() {
   // ferme modal si ouvert
   closeGameOverModal();
+  closeWinModal();
 
   // reset
   stopGame();
@@ -210,10 +350,64 @@ function update() {
 
   // fin de partie
   if (game.isOver) {
-    stopGame();
+  stopGame();
+
+  if (game.isWin) {
+    const pseudo = getPlayerName() || "Joueur";
+    // on enregistre le résultat
+    addResultToLeaderboard({ pseudo, score: gameScore, timeSec: gameTime });
+
+    // affiche la win popup (score/temps)
+    if (winScoreEl) winScoreEl.textContent = String(gameScore);
+    if (winTimeEl) winTimeEl.textContent = formatTime(gameTime);
+    openWinModal();
+  } else {
     openGameOverModal();
   }
 }
+}
+
+winRestartBtn?.addEventListener("click", () => {
+  closeWinModal();
+  initializeGame();
+});
+
+winQuitBtn?.addEventListener("click", () => {
+  closeWinModal();
+  stopGame();
+  gameScreen.classList.add("hidden");
+  landingPage.classList.remove("hidden");
+});
+
+winModal?.querySelector(".modal-overlay")?.addEventListener("click", closeWinModal);
+
+function addResultToLeaderboard({ pseudo, score, timeSec }) {
+  const lb = loadLeaderboard();
+
+  lb.push({
+    pseudo,
+    score,
+    timeSec,
+    createdAt: Date.now(),
+  });
+
+  // Tri: score desc, puis temps asc (si timeSec présent)
+  lb.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+
+    // si un temps manque, on le met "après"
+    const at = a.timeSec ?? Number.POSITIVE_INFINITY;
+    const bt = b.timeSec ?? Number.POSITIVE_INFINITY;
+    return at - bt;
+  });
+
+  // (option) limiter à 100 entrées
+  const trimmed = lb.slice(0, 100);
+
+  saveLeaderboard(trimmed);
+  return trimmed;
+}
+
 
 function draw() {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -225,6 +419,8 @@ function gameLoop() {
   draw();
   if (gameIsRunning) requestAnimationFrame(gameLoop);
 }
+
+
 
 // --- AIM + SHOOT ---
 function calculateAngle(mouseX, mouseY) {
