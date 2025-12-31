@@ -666,6 +666,15 @@ body {
     display: none;
 }
 
+/* Game Over: optionnel (si tu veux différencier) */
+#gameover-modal .modal-content {
+  max-width: 520px;
+}
+
+#win-modal p {
+    color: #ffffff;
+}
+
 @keyframes modalFadeIn {
     from {
         opacity: 0;
@@ -684,6 +693,12 @@ body {
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(8px);
     animation: overlayFadeIn 0.3s ease-out;
+}
+
+.win-player-row {
+  background: rgba(255,255,255,0.18);
+  outline: 2px solid rgba(255,255,255,0.35);
+  outline-offset: -2px;
 }
 
 @keyframes overlayFadeIn {
