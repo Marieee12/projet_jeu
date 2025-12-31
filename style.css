@@ -695,6 +695,12 @@ body {
     animation: overlayFadeIn 0.3s ease-out;
 }
 
+.win-player-row {
+  background: rgba(255,255,255,0.18);
+  outline: 2px solid rgba(255,255,255,0.35);
+  outline-offset: -2px;
+}
+
 @keyframes overlayFadeIn {
     from {
         opacity: 0;

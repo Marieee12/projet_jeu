@@ -260,14 +260,36 @@
     <div id="win-modal" class="modal hidden">
         <div class="modal-overlay"></div>
 
-        <div class="modal-content" style="max-width: 560px;">
+        <div class="modal-content" style="max-width: 720px;">
             <h2 class="modal-title">🏆 Victoire !</h2>
 
-            <p style="text-align:center; margin-top:10px;">
-                Score : <strong id="win-score">0</strong>
+            <p style="text-align:center; margin-top:10px; color:#ffffff;">
+                Bravo <strong id="win-player" style="color:#ffffff;">Joueur</strong> ✨
                 <br />
-                Temps : <strong id="win-time">0:00</strong>
+                Score : <strong id="win-score" style="color:#ffffff;">0</strong>
+                <br />
+                Temps : <strong id="win-time" style="color:#ffffff;">0:00</strong>
+                <br />
+                Rang : <strong id="win-rank" style="color:#ffffff;">#?</strong>
             </p>
+
+            <div style="margin-top:14px;">
+                <h3 style="margin:0 0 10px 0; text-align:center; color:#ffffff; opacity:0.9;">Classement</h3>
+
+                <div style="max-height: 260px; overflow:auto; border-radius: 14px;">
+                    <table style="width:100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left; padding:10px 12px; color:#ffffff; opacity:0.8;">Rang</th>
+                                <th style="text-align:left; padding:10px 12px; color:#ffffff; opacity:0.8;">Pseudo</th>
+                                <th style="text-align:right; padding:10px 12px; color:#ffffff; opacity:0.8;">Score</th>
+                                <th style="text-align:right; padding:10px 12px; color:#ffffff; opacity:0.8;">Temps</th>
+                            </tr>
+                        </thead>
+                        <tbody id="win-leaderboard-body"></tbody>
+                    </table>
+                </div>
+            </div>
 
             <div style="display:flex; gap:12px; justify-content:center; margin-top:18px; flex-wrap:wrap;">
                 <button id="win-restart" class="modal-button">🔁 Rejouer</button>
@@ -275,6 +297,7 @@
             </div>
         </div>
     </div>
+
 
 
     <script type="module" src="script.js"></script>

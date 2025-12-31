@@ -27,10 +27,19 @@ const quitGameBtn = document.getElementById("quit-game");
 
 // Modal win
 const winModal = document.getElementById("win-modal");
+const winPlayerEl = document.getElementById("win-player");
 const winScoreEl = document.getElementById("win-score");
 const winTimeEl = document.getElementById("win-time");
+const winRankEl = document.getElementById("win-rank");
+const winTbody = document.getElementById("win-leaderboard-body");
 const winRestartBtn = document.getElementById("win-restart");
 const winQuitBtn = document.getElementById("win-quit");
+
+// PLAYER PSEUDO UI
+const playerInput = document.getElementById("player-input");
+const playerSave = document.getElementById("player-save");
+const playerChange = document.getElementById("player-change");
+const playerHello = document.getElementById("player-hello");
 
 // --- VARIABLES ---
 let game = null;
@@ -50,40 +59,37 @@ const COLOR_HEX_TO_NAME = {
   "#ffff4d": "yellow",
 };
 
-// PLAYER PSEUDO
-const playerInput = document.getElementById("player-input");
-const playerSave = document.getElementById("player-save");
-const playerChange = document.getElementById("player-change");
-const playerHello = document.getElementById("player-hello");
-
-
-// PLAYER SESSION
+// --- LOCAL STORAGE KEYS ---
 const LS_PLAYER = "bubbleShooter.playerName";
+const LS_LEADERBOARD = "bubbleShooter.leaderboard";
 
+// --- HELPERS ---
 function getPlayerName() {
   return localStorage.getItem(LS_PLAYER) || "";
 }
-
 function setPlayerName(name) {
   localStorage.setItem(LS_PLAYER, name.trim());
 }
-
 function clearPlayerName() {
   localStorage.removeItem(LS_PLAYER);
 }
+function formatTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
 
+// --- PLAYER UI ---
 function refreshPlayerUI() {
   const name = getPlayerName();
 
   if (!name) {
-    // pas de pseudo => on montre input + OK, on cache JOUER
     if (playerHello) playerHello.textContent = "Choisis un pseudo pour jouer.";
     playerInput?.classList.remove("hidden");
     playerSave?.classList.remove("hidden");
     playerChange?.classList.add("hidden");
     startButton?.classList.add("hidden");
   } else {
-    // pseudo ok => on cache input, on montre JOUER
     if (playerHello) playerHello.textContent = `Salut, ${name} 👋`;
     playerInput?.classList.add("hidden");
     playerSave?.classList.add("hidden");
@@ -112,11 +118,7 @@ playerChange?.addEventListener("click", () => {
   refreshPlayerUI();
 });
 
-
-// LEADERBOARD
-const LS_LEADERBOARD = "bubbleShooter.leaderboard";
-
-// Lit le tableau HTML existant (fake) et le convertit en JSON
+// --- LEADERBOARD (seed depuis le tableau landing) ---
 function seedLeaderboardFromLandingTable() {
   const rows = document.querySelectorAll("#leaderboard tbody tr");
   const data = [];
@@ -131,12 +133,16 @@ function seedLeaderboardFromLandingTable() {
     data.push({
       pseudo,
       score,
-      timeSec: null, // les fake n'ont pas forcément le temps
+      timeSec: null,
       createdAt: Date.now(),
     });
   });
 
   return data;
+}
+
+function saveLeaderboard(lb) {
+  localStorage.setItem(LS_LEADERBOARD, JSON.stringify(lb));
 }
 
 function loadLeaderboard() {
@@ -145,7 +151,7 @@ function loadLeaderboard() {
     try {
       return JSON.parse(raw);
     } catch {
-      // si corrompu, on repart de la seed
+      // ignore -> reseed
     }
   }
   const seeded = seedLeaderboardFromLandingTable();
@@ -153,10 +159,72 @@ function loadLeaderboard() {
   return seeded;
 }
 
-function saveLeaderboard(lb) {
-  localStorage.setItem(LS_LEADERBOARD, JSON.stringify(lb));
+function sortLeaderboard(lb) {
+  // score desc, puis temps asc (temps manquant => après)
+  return lb.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    const at = a.timeSec ?? Number.POSITIVE_INFINITY;
+    const bt = b.timeSec ?? Number.POSITIVE_INFINITY;
+    return at - bt;
+  });
 }
 
+function recordWinAndGetRank({ pseudo, score, timeSec }) {
+  const lb = loadLeaderboard();
+  const entry = { pseudo, score, timeSec, createdAt: Date.now() };
+
+  lb.push(entry);
+  sortLeaderboard(lb);
+
+  const trimmed = lb.slice(0, 200);
+  saveLeaderboard(trimmed);
+
+  const idx = trimmed.findIndex(
+    (x) =>
+      x.pseudo === entry.pseudo &&
+      x.score === entry.score &&
+      x.timeSec === entry.timeSec &&
+      x.createdAt === entry.createdAt
+  );
+
+  return { lb: trimmed, index: idx === -1 ? 0 : idx };
+}
+
+function renderWinLeaderboardCentered(lb, playerIndex) {
+  if (!winTbody) return;
+
+  const windowSize = 9;
+  const half = Math.floor(windowSize / 2);
+  const start = Math.max(0, playerIndex - half);
+  const end = Math.min(lb.length, start + windowSize);
+  const slice = lb.slice(start, end);
+
+  winTbody.innerHTML = "";
+
+  slice.forEach((row, i) => {
+    const absoluteRank = start + i + 1;
+    const tr = document.createElement("tr");
+
+    if (start + i === playerIndex) {
+      tr.classList.add("win-player-row");
+      tr.dataset.playerRow = "1";
+    }
+
+    const timeText = row.timeSec == null ? "-" : formatTime(row.timeSec);
+
+    tr.innerHTML = `
+      <td style="padding:10px 12px; color:#ffffff;">${absoluteRank}</td>
+      <td style="padding:10px 12px; color:#ffffff;">${row.pseudo}</td>
+      <td style="padding:10px 12px; color:#ffffff; text-align:right;">${row.score}</td>
+      <td style="padding:10px 12px; color:#ffffff; text-align:right;">${timeText}</td>
+    `;
+
+    winTbody.appendChild(tr);
+  });
+
+  const playerRow = winTbody.querySelector('tr[data-player-row="1"]');
+  if (playerRow) playerRow.scrollIntoView({ block: "center" });
+}
 
 // --- GESTION DES ÉCRANS ---
 function hideLoader() {
@@ -169,6 +237,7 @@ function hideLoader() {
     if (left) left.style.opacity = "1";
     if (right) right.style.opacity = "1";
   }, 100);
+
   refreshPlayerUI();
 }
 
@@ -186,7 +255,6 @@ startButton?.addEventListener("click", () => {
   initializeGame();
 });
 
-
 backToMenuButton?.addEventListener("click", () => {
   stopGame();
   gameScreen.classList.add("hidden");
@@ -202,28 +270,21 @@ pauseButton?.addEventListener("click", () => {
   if (gameIsRunning) gameLoop();
 });
 
-function formatTime(sec) {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m}:${String(s).padStart(2, "0")}`;
-}
-
 // --- MODAL RÈGLES ---
 rulesButton?.addEventListener("click", () => {
-  rulesModal.classList.remove("hidden");
+  rulesModal?.classList.remove("hidden");
   document.body.style.overflow = "hidden";
 });
-
 function closeRulesModal() {
-  rulesModal.classList.add("hidden");
+  rulesModal?.classList.add("hidden");
   document.body.style.overflow = "auto";
 }
-
 closeModalButton?.addEventListener("click", closeRulesModal);
 rulesModal?.querySelector(".modal-overlay")?.addEventListener("click", closeRulesModal);
 
 startFromModalButton?.addEventListener("click", () => {
   closeRulesModal();
+  if (!getPlayerName()) return; // sécurité (si tu veux pouvoir jouer depuis règles)
   landingPage.classList.add("hidden");
   gameScreen.classList.remove("hidden");
   initializeGame();
@@ -237,61 +298,59 @@ document.addEventListener("keydown", (e) => {
 
 // --- MODAL GAME OVER ---
 function openGameOverModal() {
-  if (!gameOverModal) return;
-  gameOverModal.classList.remove("hidden");
+  gameOverModal?.classList.remove("hidden");
   document.body.style.overflow = "hidden";
 }
-
 function closeGameOverModal() {
-  if (!gameOverModal) return;
-  gameOverModal.classList.add("hidden");
+  gameOverModal?.classList.add("hidden");
   document.body.style.overflow = "auto";
 }
-
 restartGameBtn?.addEventListener("click", () => {
   closeGameOverModal();
-  initializeGame(); // relance direct
+  initializeGame();
 });
-
 quitGameBtn?.addEventListener("click", () => {
   closeGameOverModal();
   stopGame();
   gameScreen.classList.add("hidden");
   landingPage.classList.remove("hidden");
 });
-
 gameOverModal?.querySelector(".modal-overlay")?.addEventListener("click", closeGameOverModal);
 
-// Modal win
+// --- MODAL WIN ---
 function openWinModal() {
-  if (!winModal) return;
-  winModal.classList.remove("hidden");
+  winModal?.classList.remove("hidden");
   document.body.style.overflow = "hidden";
 }
-
 function closeWinModal() {
-  if (!winModal) return;
-  winModal.classList.add("hidden");
+  winModal?.classList.add("hidden");
   document.body.style.overflow = "auto";
 }
-
+winRestartBtn?.addEventListener("click", () => {
+  closeWinModal();
+  initializeGame();
+});
+winQuitBtn?.addEventListener("click", () => {
+  closeWinModal();
+  stopGame();
+  gameScreen.classList.add("hidden");
+  landingPage.classList.remove("hidden");
+});
+winModal?.querySelector(".modal-overlay")?.addEventListener("click", closeWinModal);
 
 // --- HUD ---
 function updateScoreDisplay() {
   scoreDisplay.textContent = String(gameScore);
 }
-
 function updateTimeDisplay() {
-  const minutes = Math.floor(gameTime / 60);
-  const seconds = gameTime % 60;
-  timeDisplay.textContent = `${minutes}:${String(seconds).padStart(2, "0")}`;
+  timeDisplay.textContent = formatTime(gameTime);
 }
 
-// --- PREVIEW (affiche la SUIVANTE) ---
+// --- PREVIEW (SUIVANTE) ---
 function updateNextBubblePreview() {
   if (!game) return;
 
-  const hex = game.nextColor; // SUIVANTE
+  const hex = game.nextColor; // doit exister dans Game
   const name = COLOR_HEX_TO_NAME[hex];
   if (!name) return;
 
@@ -302,28 +361,23 @@ function updateNextBubblePreview() {
 
 // --- INIT ---
 function initializeGame() {
-  // ferme modal si ouvert
   closeGameOverModal();
   closeWinModal();
 
-  // reset
   stopGame();
   gameScore = 0;
   gameTime = 0;
   updateScoreDisplay();
   updateTimeDisplay();
 
-  // instanciation moteur
   game = new Game(canvas, ctx, {
     radius: 20,
     initialFilledRows: 6,
     turnsPerDrop: 10,
   });
 
-  // preview
   updateNextBubblePreview();
 
-  // timer
   gameIsRunning = true;
   gameTimeInterval = setInterval(() => {
     if (!gameIsRunning) return;
@@ -343,71 +397,35 @@ function update() {
 
   if (removed > 0) gameScore += removed * 10;
   if (fallen > 0) gameScore += fallen * 20;
-
   if (removed > 0 || fallen > 0) updateScoreDisplay();
 
   updateNextBubblePreview();
 
-  // fin de partie
   if (game.isOver) {
-  stopGame();
+    stopGame();
 
-  if (game.isWin) {
-    const pseudo = getPlayerName() || "Joueur";
-    // on enregistre le résultat
-    addResultToLeaderboard({ pseudo, score: gameScore, timeSec: gameTime });
+    if (game.isWin) {
+      const pseudo = getPlayerName() || "Joueur";
 
-    // affiche la win popup (score/temps)
-    if (winScoreEl) winScoreEl.textContent = String(gameScore);
-    if (winTimeEl) winTimeEl.textContent = formatTime(gameTime);
-    openWinModal();
-  } else {
-    openGameOverModal();
+      winPlayerEl && (winPlayerEl.textContent = pseudo);
+      winScoreEl && (winScoreEl.textContent = String(gameScore));
+      winTimeEl && (winTimeEl.textContent = formatTime(gameTime));
+
+      const { lb, index } = recordWinAndGetRank({
+        pseudo,
+        score: gameScore,
+        timeSec: gameTime,
+      });
+
+      winRankEl && (winRankEl.textContent = `#${index + 1}`);
+      renderWinLeaderboardCentered(lb, index);
+
+      openWinModal();
+    } else {
+      openGameOverModal();
+    }
   }
 }
-}
-
-winRestartBtn?.addEventListener("click", () => {
-  closeWinModal();
-  initializeGame();
-});
-
-winQuitBtn?.addEventListener("click", () => {
-  closeWinModal();
-  stopGame();
-  gameScreen.classList.add("hidden");
-  landingPage.classList.remove("hidden");
-});
-
-winModal?.querySelector(".modal-overlay")?.addEventListener("click", closeWinModal);
-
-function addResultToLeaderboard({ pseudo, score, timeSec }) {
-  const lb = loadLeaderboard();
-
-  lb.push({
-    pseudo,
-    score,
-    timeSec,
-    createdAt: Date.now(),
-  });
-
-  // Tri: score desc, puis temps asc (si timeSec présent)
-  lb.sort((a, b) => {
-    if (b.score !== a.score) return b.score - a.score;
-
-    // si un temps manque, on le met "après"
-    const at = a.timeSec ?? Number.POSITIVE_INFINITY;
-    const bt = b.timeSec ?? Number.POSITIVE_INFINITY;
-    return at - bt;
-  });
-
-  // (option) limiter à 100 entrées
-  const trimmed = lb.slice(0, 100);
-
-  saveLeaderboard(trimmed);
-  return trimmed;
-}
-
 
 function draw() {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -420,8 +438,6 @@ function gameLoop() {
   if (gameIsRunning) requestAnimationFrame(gameLoop);
 }
 
-
-
 // --- AIM + SHOOT ---
 function calculateAngle(mouseX, mouseY) {
   const cannonX = game ? game.startX : CANVAS_WIDTH / 2;
@@ -432,7 +448,6 @@ function calculateAngle(mouseX, mouseY) {
 
   let angle = Math.atan2(dy, dx);
 
-  // limiter : ne pas tirer vers le bas
   const minAngle = (-160 * Math.PI) / 180;
   const maxAngle = (-20 * Math.PI) / 180;
 
@@ -466,6 +481,7 @@ document.addEventListener("keydown", (e) => {
 
 // --- START loader ---
 setTimeout(hideLoader, 2000);
+
 
 
 
