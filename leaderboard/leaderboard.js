@@ -77,19 +77,13 @@ export function recordWinAndGetRank({ pseudo, score, timeSec }) {
 export function renderWinLeaderboardCentered(dom, lb, playerIndex) {
   if (!dom.winTbody) return;
 
-  const windowSize = 9;
-  const half = Math.floor(windowSize / 2);
-  const start = Math.max(0, playerIndex - half);
-  const end = Math.min(lb.length, start + windowSize);
-  const slice = lb.slice(start, end);
-
   dom.winTbody.innerHTML = "";
 
-  slice.forEach((row, i) => {
-    const absoluteRank = start + i + 1;
+  lb.forEach((row, i) => {
     const tr = document.createElement("tr");
 
-    if (start + i === playerIndex) {
+    // 👉 ligne du joueur
+    if (i === playerIndex) {
       tr.classList.add("win-player-row");
       tr.dataset.playerRow = "1";
     }
@@ -97,14 +91,37 @@ export function renderWinLeaderboardCentered(dom, lb, playerIndex) {
     const timeText = row.timeSec == null ? "-" : formatTime(row.timeSec);
 
     tr.innerHTML = `
-      <td style="padding:10px 12px; color:#ffffff;">${absoluteRank}</td>
+      <td style="padding:10px 12px; color:#ffffff;">${i + 1}</td>
       <td style="padding:10px 12px; color:#ffffff;">${row.pseudo}</td>
       <td style="padding:10px 12px; color:#ffffff; text-align:right;">${row.score}</td>
       <td style="padding:10px 12px; color:#ffffff; text-align:right;">${timeText}</td>
     `;
+
     dom.winTbody.appendChild(tr);
   });
 
-  const playerRow = dom.winTbody.querySelector('tr[data-player-row="1"]');
-  if (playerRow) playerRow.scrollIntoView({ block: "center" });
+  // centre la vue sur le joueur APRÈS render
+  requestAnimationFrame(() => {
+    const playerRow = dom.winTbody.querySelector('tr[data-player-row="1"]');
+    if (playerRow) {
+      playerRow.scrollIntoView({
+        block: "center",
+        behavior: "smooth",
+      });
+    }
+  });
 }
+
+export function getTopLeaderboard(limit = 5) {
+  const raw = localStorage.getItem("bubbleShooter.leaderboard");
+  if (!raw) return [];
+
+  try {
+    const lb = JSON.parse(raw);
+    return lb.slice(0, limit);
+  } catch {
+    return [];
+  }
+}
+
+

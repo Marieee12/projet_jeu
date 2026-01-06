@@ -12,6 +12,8 @@ export const dom = {
   timeDisplay: document.getElementById("time-display"),
   canvas: document.getElementById("gameCanvas"),
   ctx: document.getElementById("gameCanvas")?.getContext("2d"),
+  landingLeaderboardBody: document.getElementById("landing-leaderboard-body"),
+
 
   // rules modal
   rulesModal: document.getElementById("rules-modal"),

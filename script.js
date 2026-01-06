@@ -2,6 +2,7 @@ import { dom } from "./ui/dom.js";
 import { bindPlayerUI, getPlayerName } from "./player/session.js";
 import { bindModals } from "./ui/modals.js";
 import { createGameController } from "./game/loop.js";
+import { renderLandingLeaderboard } from "./ui/landingleaderboard.js";
 
 function hideLoader() {
   dom.loaderScreen.classList.add("hidden");
@@ -13,6 +14,8 @@ function hideLoader() {
   }, 100);
 
   player.refreshPlayerUI();
+  renderLandingLeaderboard(dom);
+
 }
 
 const player = bindPlayerUI(dom);
@@ -29,12 +32,15 @@ const modals = bindModals(dom, {
     gameController.stopGame();
     dom.gameScreen.classList.add("hidden");
     dom.landingPage.classList.remove("hidden");
+    dom.landingPage.classList.remove("hidden");
+    renderLandingLeaderboard(dom);
   },
   onWinRestart: () => gameController.initializeGame({ showIntro: false }),
   onWinQuit: () => {
     gameController.stopGame();
     dom.gameScreen.classList.add("hidden");
     dom.landingPage.classList.remove("hidden");
+    renderLandingLeaderboard(dom);
   },
 });
 
