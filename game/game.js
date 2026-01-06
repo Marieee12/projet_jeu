@@ -1,4 +1,3 @@
-// game.js
 import { Bubble } from "./bubble.js";
 
 export class Game {

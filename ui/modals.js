@@ -1,3 +1,6 @@
+import { getPlayerName } from "../player/session.js";
+import { recordWinAndGetRank, renderWinLeaderboardCentered } from "../leaderboard/leaderboard.js";
+
 export function bindModals(dom, callbacks) {
   // --- règles ---
   dom.rulesButton?.addEventListener("click", () => {
@@ -46,12 +49,21 @@ export function bindModals(dom, callbacks) {
 
   // --- win ---
   function openWinModal({ score, timeSec }) {
-    if (dom.winScoreEl) dom.winScoreEl.textContent = String(score);
-    if (dom.winTimeEl) dom.winTimeEl.textContent = formatTime(timeSec);
+  const pseudo = getPlayerName() || "Joueur";
 
-    dom.winModal?.classList.remove("hidden");
-    document.body.style.overflow = "hidden";
-  }
+  if (dom.winPlayerEl) dom.winPlayerEl.textContent = pseudo;
+  if (dom.winScoreEl) dom.winScoreEl.textContent = String(score);
+  if (dom.winTimeEl) dom.winTimeEl.textContent = formatTime(timeSec);
+
+  // Leaderboard
+  const { lb, index } = recordWinAndGetRank({ pseudo, score, timeSec });
+  if (dom.winRankEl) dom.winRankEl.textContent = `#${index + 1}`;
+  renderWinLeaderboardCentered(dom, lb, index);
+
+  dom.winModal?.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
 
   function closeWinModal() {
     dom.winModal?.classList.add("hidden");

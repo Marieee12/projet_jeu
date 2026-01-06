@@ -1,4 +1,3 @@
-// script.js
 import { dom } from "./ui/dom.js";
 import { bindPlayerUI, getPlayerName } from "./player/session.js";
 import { bindModals } from "./ui/modals.js";
