@@ -12,11 +12,19 @@ export const dom = {
   timeDisplay: document.getElementById("time-display"),
   canvas: document.getElementById("gameCanvas"),
   ctx: document.getElementById("gameCanvas")?.getContext("2d"),
+  landingLeaderboardBody: document.getElementById("landing-leaderboard-body"),
+
 
   // rules modal
   rulesModal: document.getElementById("rules-modal"),
   closeRulesBtn: document.getElementById("close-rules-modal"),
   startFromModalBtn: document.getElementById("start-from-modal"),
+
+  // Level intro loader
+  levelIntro: document.getElementById("level-intro"),
+  levelIntroTitle: document.getElementById("level-intro-title"),
+  levelIntroSubtitle: document.getElementById("level-intro-subtitle"),
+  levelIntroProgress: document.getElementById("level-intro-progress"),
 
   // gameover modal
   gameOverModal: document.getElementById("gameover-modal"),

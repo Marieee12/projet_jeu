@@ -44,34 +44,11 @@
                         <th>Score</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr class="rank-1">
-                        <td>🥇</td>
-                        <td>Alice</td>
-                        <td>3110</td>
-                    </tr>
-                    <tr class="rank-2">
-                        <td>🥈</td>
-                        <td>Bob</td>
-                        <td>3030</td>
-                    </tr>
-                    <tr class="rank-3">
-                        <td>🥉</td>
-                        <td>Chloé</td>
-                        <td>3000</td>
-                    </tr>
-                    <tr>
-                        <td>4</td>
-                        <td>David</td>
-                        <td>2980</td>
-                    </tr>
-                    <tr>
-                        <td>5</td>
-                        <td>Emma</td>
-                        <td>2930</td>
-                    </tr>
+                <tbody id="landing-leaderboard-body">
+                    <!-- lignes générées en JS -->
                 </tbody>
             </table>
+
         </div>
 
         <!-- milieu ZONE PRINCIPALE ET BOUTONS -->
@@ -156,6 +133,26 @@
                             style="color: #ffffff;"></i></button>
                     <button id="back-to-menu" class="icon-button"><i class="fa-solid fa-house"
                             style="color: #ffffff;"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- LEVEL INTRO LOADER -->
+        <div id="level-intro" class="screen hidden">
+            <div class="loader-level-content">
+                <h1 class="loader-level-title" id="level-intro-title">Niveau 1</h1>
+
+                <div class="bubble-loader">
+                    <div class="bubble-item bubble-1"></div>
+                    <div class="bubble-item bubble-2"></div>
+                    <div class="bubble-item bubble-3"></div>
+                    <div class="bubble-item bubble-4"></div>
+                </div>
+
+                <p class="loader-text" id="level-intro-subtitle">Prépare-toi...</p>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="level-intro-progress"></div>
                 </div>
             </div>
         </div>
