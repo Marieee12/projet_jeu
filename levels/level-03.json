@@ -1,0 +1,58 @@
+{
+  "id": 3,
+  "name": "Niveau 3 — Obstacles & Bonus",
+  "grid": {
+    "rows": 14,
+    "cols": 17,
+    "startY": 60,
+    "radius": 20
+  },
+  "difficulty": {
+    "turnsPerDrop": 8,
+    "shotSpeed": 9.5,
+    "availableColors": [
+      "#ff4d4d",
+      "#4d94ff",
+      "#4dff4d",
+      "#ffff4d"
+    ]
+  },
+  "spawn": {
+    "initialFilledRows": 6,
+    "pattern": "rows_full",
+    "randomFillChance": 1.0
+  },
+  "entities": [
+    {
+      "type": "block",
+      "row": 2,
+      "col": 4,
+      "indestructible": true,
+      "shape": "square"
+    },
+    {
+      "type": "block",
+      "row": 2,
+      "col": 5,
+      "indestructible": true,
+      "shape": "square"
+    },
+    {
+      "type": "star",
+      "row": 1,
+      "col": 7,
+      "points": 700
+    }
+  ],
+  "winCondition": {
+    "type": "clear_all_bubbles"
+  },
+  "loseCondition": {
+    "type": "reach_danger_line"
+  },
+  "scoring": {
+    "matchBubble": 10,
+    "fallenBubble": 20,
+    "starBonusDefault": 500
+  }
+}
