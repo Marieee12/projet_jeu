@@ -1,0 +1,115 @@
+# This file is a template, and might need editing before it works on your project.
+# This is a sample GitLab CI/CD configuration file that should run without any modifications.
+# It demonstrates a basic 3 stage CI/CD pipeline. Instead of real tests or scripts,
+# it uses echo commands to simulate the pipeline execution.
+#
+# A pipeline is composed of independent jobs that run scripts, grouped into stages.
+# Stages run in sequential order, but jobs within stages run in parallel.
+#
+# For more information, see: https://docs.gitlab.com/ee/ci/yaml/#stages
+#
+# You can copy and paste this template into a new `.gitlab-ci.yml` file.
+# You should not add this template to an existing `.gitlab-ci.yml` file by using the `include:` keyword.
+#
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/development/cicd/templates/
+# This specific template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
+
+# ================================
+# Définition des stages de la pipeline
+# L'ordre définit l'ordre d'exécution
+# ================================
+stages:
+  - build     # Étape de construction
+  - test      # Étape de tests
+  - deploy    # Étape de déploiement
+  - cleanup   # Étape de nettoyage
+
+# ================================
+# Variables d'environnement globales
+# ================================
+variables:
+  PROJECT_NAME: "projet_jeu"              # Nom du projet
+  DEPLOY_SITE: "https://example.com/"     # URL de déploiement (exemple)
+
+# ================================
+# Image Docker par défaut
+# ================================
+default:
+  image: alpine:3.20                      # Image Linux légère
+
+# ================================
+# JOB : BUILD
+# Préparation simple du projet
+# ================================
+build-job:
+  stage: build
+  script:
+    - 'echo "Hello, $GITLAB_USER_LOGIN!"'     # Utilisateur GitLab
+    - 'echo "Project: $PROJECT_NAME"'         # Variable personnalisée
+    - 'echo "Branch: $CI_COMMIT_BRANCH"'      # Branche courante
+    - 'echo "Commit: $CI_COMMIT_SHORT_SHA"'   # Commit courant
+    - 'echo "Listing files:"'                 # Affichage du dépôt
+    - 'ls -la'
+
+  # Fichiers sauvegardés après le job
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - README.md
+      - index.html
+
+# ================================
+# JOB : TEST 1
+# Test rapide (simulation)
+# ================================
+test-job1:
+  stage: test
+  script:
+    - 'echo "This job tests something"'
+    - 'echo "Quick check done."'
+
+# ================================
+# JOB : TEST 2
+# Test plus long (simulation)
+# ================================
+test-job2:
+  stage: test
+  script:
+    - 'echo "This job tests something, but takes more time than test-job1."'
+    - 'echo "Simulating a longer test..."'
+    - 'sleep 20'
+    - 'echo "Long test done."'
+
+# ================================
+# JOB : DEPLOY
+# Déploiement simulé (manuel)
+# ================================
+deploy-prod:
+  stage: deploy
+  script:
+    - 'echo "This job deploys something from the $CI_COMMIT_BRANCH branch."'
+    - 'echo "Deploy site: $DEPLOY_SITE"'
+    - 'echo "Deploy placeholder (no real deploy)"'
+
+  environment: production                 # Environnement GitLab
+  when: manual                            # Lancement manuel
+
+  # Règles d'exécution
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - when: never
+
+# ================================
+# JOB : CLEANUP
+# Toujours exécuté
+# ================================
+cleanup-job:
+  stage: cleanup
+  script:
+    - 'echo "Cleanup always runs (even if previous jobs failed)."'
+  when: always
+
+
