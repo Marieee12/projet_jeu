@@ -1,5 +1,6 @@
 import { getPlayerName } from "../player/session.js";
 import { recordWinAndGetRank, renderWinLeaderboardCentered } from "../leaderboard/leaderboard.js";
+import { renderLandingLeaderboard } from "./landingleaderboard.js";
 
 export function bindModals(dom, callbacks) {
   // --- règles ---
@@ -25,7 +26,15 @@ export function bindModals(dom, callbacks) {
   });
 
   // --- game over ---
-  function openGameOverModal() {
+  function openGameOverModal({ score, timeSec } = {}) {
+    // Enregistrer le score même en cas de défaite
+    if (score !== undefined && timeSec !== undefined) {
+      const pseudo = getPlayerName() || "Joueur";
+      recordWinAndGetRank({ pseudo, score, timeSec });
+      // Actualiser le classement de la landing page
+      renderLandingLeaderboard(dom);
+    }
+    
     dom.gameOverModal?.classList.remove("hidden");
     document.body.style.overflow = "hidden";
   }
@@ -59,6 +68,9 @@ export function bindModals(dom, callbacks) {
   const { lb, index } = recordWinAndGetRank({ pseudo, score, timeSec });
   if (dom.winRankEl) dom.winRankEl.textContent = `#${index + 1}`;
   renderWinLeaderboardCentered(dom, lb, index);
+
+  // Actualiser le classement de la landing page
+  renderLandingLeaderboard(dom);
 
   dom.winModal?.classList.remove("hidden");
   document.body.style.overflow = "hidden";

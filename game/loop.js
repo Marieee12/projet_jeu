@@ -2,6 +2,7 @@
 import { Game } from "./game.js";
 import { loadLevel } from "../levels/loader-levels.js";
 import { showLevelIntro } from "../ui/levelIntro.js";
+import { renderLandingLeaderboard } from "../ui/landingleaderboard.js";
 
 export function createGameController(dom, modals) {
   const { canvas, ctx, scoreDisplay, timeDisplay, pauseButton } = dom;
@@ -134,12 +135,31 @@ export function createGameController(dom, modals) {
       }
 
       // Game over
-      modals?.openGameOverModal?.();
+      modals?.openGameOverModal?.({ score, timeSec });
     }
   }
 
   function draw() {
-    if (game) game.draw();
+    if (game) {
+      game.draw();
+      updateBallColors(); // Mettre à jour l'affichage des couleurs
+    }
+  }
+
+  function updateBallColors() {
+    if (!game) return;
+    
+    const colors = game.getCurrentColors();
+    
+    // Mettre à jour l'affichage de la balle actuelle
+    if (dom.currentBallDisplay) {
+      dom.currentBallDisplay.style.backgroundColor = colors.current;
+    }
+    
+    // Mettre à jour l'affichage de la prochaine balle
+    if (dom.nextBallDisplay) {
+      dom.nextBallDisplay.style.backgroundColor = colors.next;
+    }
   }
 
   function gameLoop() {
@@ -210,6 +230,7 @@ export function createGameController(dom, modals) {
       stopGame();
       dom.gameScreen.classList.add("hidden");
       dom.landingPage.classList.remove("hidden");
+      renderLandingLeaderboard(dom); // Actualiser le classement
     });
   }
 
