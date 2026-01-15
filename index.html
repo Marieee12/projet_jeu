@@ -35,13 +35,14 @@
 
         <!-- Gauche CLASSEMENT SIMULÉ -->
         <div id="leaderboard" class="panel panel-left slide-in-left">
-            <h2><i class="fa-solid fa-ranking-star"></i>CLASSEMENT</h2>
+            <h2 id="leaderboard-title"><i class="fa-solid fa-ranking-star"></i>MES SCORES</h2>
             <table>
-                <thead>
+                <thead id="leaderboard-header">
                     <tr>
                         <th>Rang</th>
                         <th>Pseudo</th>
                         <th>Score</th>
+                        <th>Temps</th>
                     </tr>
                 </thead>
                 <tbody id="landing-leaderboard-body">
@@ -165,15 +166,18 @@
 
         <!-- Zone de choix de couleur -->
         <div id="color-palette">
-            <h3>Prochaine balle :</h3>
-            <div class="palette-colors">
-                <button class="color-select selected" data-color="red" style="background-color: #ff4d4d;"
-                    title="Rouge"></button>
-                <button class="color-select" data-color="blue" style="background-color: #4d94ff;" title="Bleu"></button>
-                <button class="color-select" data-color="green" style="background-color: #4dff4d;"
-                    title="Vert"></button>
-                <button class="color-select" data-color="yellow" style="background-color: #ffff4d;"
-                    title="Jaune"></button>
+            <div class="palette-section">
+                <h3>Balle actuelle :</h3>
+                <div id="current-ball-display" class="ball-display">
+                    <div id="current-ball" class="color-ball" style="background-color: #ff4d4d;"></div>
+                </div>
+            </div>
+            
+            <div class="palette-section">
+                <h3>Prochaine balle :</h3>
+                <div id="next-ball-display" class="ball-display">
+                    <div id="next-ball" class="color-ball" style="background-color: #4d94ff;"></div>
+                </div>
             </div>
         </div>
     </div>

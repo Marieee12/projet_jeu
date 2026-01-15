@@ -29,17 +29,35 @@ function saveLeaderboard(lb) {
 }
 
 function loadLeaderboard() {
-  const raw = localStorage.getItem("bubbleShooter.leaderboard");
+  const raw = localStorage.getItem(LS_LEADERBOARD);
 
   if (raw) {
     try {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      // Vérifier que ce n'est pas un tableau vide
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
     } catch {}
   }
 
   // SEED depuis le HTML
   const seeded = seedLeaderboardFromLandingTable();
-  localStorage.setItem("bubbleShooter.leaderboard", JSON.stringify(seeded));
+  
+  // Si le HTML n'a pas de données, créer des données par défaut
+  if (seeded.length === 0) {
+    const defaultData = [
+      { pseudo: "Alice", score: 3110, timeSec: 180, createdAt: Date.now() - 5000 },
+      { pseudo: "Bob", score: 3030, timeSec: 200, createdAt: Date.now() - 4000 },
+      { pseudo: "Chloé", score: 3000, timeSec: 190, createdAt: Date.now() - 3000 },
+      { pseudo: "David", score: 2980, timeSec: 210, createdAt: Date.now() - 2000 },
+      { pseudo: "Emma", score: 2930, timeSec: 220, createdAt: Date.now() - 1000 }
+    ];
+    localStorage.setItem(LS_LEADERBOARD, JSON.stringify(defaultData));
+    return defaultData;
+  }
+  
+  localStorage.setItem(LS_LEADERBOARD, JSON.stringify(seeded));
   return seeded;
 }
 
@@ -54,6 +72,8 @@ function sortLeaderboard(lb) {
 }
 
 export function recordWinAndGetRank({ pseudo, score, timeSec }) {
+  console.log("Recording score:", { pseudo, score, timeSec });
+  
   const lb = loadLeaderboard();
   const entry = { pseudo, score, timeSec, createdAt: Date.now() };
 
@@ -62,6 +82,8 @@ export function recordWinAndGetRank({ pseudo, score, timeSec }) {
 
   const trimmed = lb.slice(0, 200);
   saveLeaderboard(trimmed);
+  
+  console.log("Leaderboard saved with", trimmed.length, "entries");
 
   const idx = trimmed.findIndex(
     (x) =>
@@ -82,7 +104,7 @@ export function renderWinLeaderboardCentered(dom, lb, playerIndex) {
   lb.forEach((row, i) => {
     const tr = document.createElement("tr");
 
-    // 👉 ligne du joueur
+    // ligne du joueur
     if (i === playerIndex) {
       tr.classList.add("win-player-row");
       tr.dataset.playerRow = "1";
@@ -113,15 +135,25 @@ export function renderWinLeaderboardCentered(dom, lb, playerIndex) {
 }
 
 export function getTopLeaderboard(limit = 5) {
-  const raw = localStorage.getItem("bubbleShooter.leaderboard");
-  if (!raw) return [];
+  const lb = loadLeaderboard(); // Utiliser loadLeaderboard au lieu de lire directement localStorage
+  return lb.slice(0, limit);
+}
 
-  try {
-    const lb = JSON.parse(raw);
-    return lb.slice(0, limit);
-  } catch {
-    return [];
-  }
+export function getPlayerScores(pseudo, limit = 5) {
+  const lb = loadLeaderboard();
+  
+  // Filtrer les scores du joueur spécifique
+  const playerScores = lb.filter(entry => entry.pseudo === pseudo);
+  
+  // Trier par score décroissant, puis par temps
+  playerScores.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    const at = a.timeSec ?? Number.POSITIVE_INFINITY;
+    const bt = b.timeSec ?? Number.POSITIVE_INFINITY;
+    return at - bt;
+  });
+  
+  return playerScores.slice(0, limit);
 }
 
 

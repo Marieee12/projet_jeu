@@ -688,6 +688,33 @@ export class Game {
     this.bubble.vx = Math.cos(angle) * this.shotSpeed;
     this.bubble.vy = Math.sin(angle) * this.shotSpeed;
   }
+
+  // =========================
+  // CHANGER LA COULEUR DE LA BALLE ACTUELLE
+  // =========================
+  changeCurrentBallColor(newColor) {
+    // Vérifier que la couleur existe dans les couleurs disponibles
+    if (!this.colors.includes(newColor)) return;
+    
+    // Ne pas changer si la balle est en mouvement
+    if (this.bubble && (this.bubble.vx !== 0 || this.bubble.vy !== 0)) return;
+    
+    // Changer la couleur de la balle actuelle
+    this.currentColor = newColor;
+    if (this.bubble) {
+      this.bubble.color = newColor;
+    }
+  }
+
+  // =========================
+  // OBTENIR LES COULEURS ACTUELLES (pour l'UI)
+  // =========================
+  getCurrentColors() {
+    return {
+      current: this.currentColor,
+      next: this.nextColor
+    };
+  }
 }
 
 

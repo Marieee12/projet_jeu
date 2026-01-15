@@ -8,11 +8,15 @@ export const dom = {
   pauseButton: document.getElementById("pause-button"),
   backToMenuButton: document.getElementById("back-to-menu"),
   colorButtons: document.querySelectorAll(".color-select"),
+  currentBallDisplay: document.getElementById("current-ball"),
+  nextBallDisplay: document.getElementById("next-ball"),
   scoreDisplay: document.getElementById("score-display"),
   timeDisplay: document.getElementById("time-display"),
   canvas: document.getElementById("gameCanvas"),
   ctx: document.getElementById("gameCanvas")?.getContext("2d"),
   landingLeaderboardBody: document.getElementById("landing-leaderboard-body"),
+  leaderboardTitle: document.getElementById("leaderboard-title"),
+  leaderboardHeader: document.getElementById("leaderboard-header"),
 
 
   // rules modal
