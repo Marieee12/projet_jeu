@@ -38,7 +38,9 @@ function loadLeaderboard() {
       if (Array.isArray(parsed) && parsed.length > 0) {
         return parsed;
       }
-    } catch {}
+    } catch (e) {
+  console.warn("Leaderboard invalide dans le localStorage", e);
+    }
   }
 
   // SEED depuis le HTML
