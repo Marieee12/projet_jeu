@@ -37,7 +37,7 @@ variables:
 # Image Docker par défaut
 # ================================
 default:
-  image: alpine:3.20                      # Image Linux légère
+  image: node:22.22.0
 
 # ================================
 # JOB : BUILD
