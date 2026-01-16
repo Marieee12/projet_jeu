@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+  node:
+    build: .
+    container_name: demo_node
+    volumes:
+      - ./:/app
+    ports:
+      - "3010:3010"
+    networks:
+      - demo
+
+networks:
+  demo:
