@@ -11,7 +11,11 @@ export function clearPlayerName() {
   localStorage.removeItem(LS_PLAYER);
 }
 
-export function bindPlayerUI(dom) {
+export function getCurrentPlayer() {
+  return getPlayerName();
+}
+
+export function bindPlayerUI(dom, onPlayerChange) {
   function refreshPlayerUI() {
     const name = getPlayerName();
 
@@ -27,6 +31,11 @@ export function bindPlayerUI(dom) {
       dom.playerSave?.classList.add("hidden");
       dom.playerChange?.classList.remove("hidden");
       dom.startButton?.classList.remove("hidden");
+    }
+    
+    // Notifier le changement de joueur pour actualiser le leaderboard
+    if (onPlayerChange) {
+      onPlayerChange(name);
     }
   }
 

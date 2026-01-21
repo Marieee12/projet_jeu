@@ -18,7 +18,11 @@ function hideLoader() {
 
 }
 
-const player = bindPlayerUI(dom);
+const player = bindPlayerUI(dom, (playerName) => {
+  // Callback appelé quand le joueur change
+  console.log("Joueur changé:", playerName);
+  renderLandingLeaderboard(dom);
+});
 
 const modals = bindModals(dom, {
   onStartFromRules: () => {

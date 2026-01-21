@@ -302,23 +302,28 @@ body {
 }
 
 #leaderboard th:first-child, #leaderboard td:first-child {
-    width: 15%;
-    text-align: center;
+    width: 20%;
+    text-align: left;
+    padding-left: 15px;
+    padding-right: 15px;
 }
 
 #leaderboard th:nth-child(2), #leaderboard td:nth-child(2) {
     width: 35%;
     text-align: left;
+    padding-left: 15px;
 }
 
 #leaderboard th:nth-child(3), #leaderboard td:nth-child(3) {
-    width: 25%;
+    width: 22.5%;
     text-align: right;
+    padding-right: 10px;
 }
 
 #leaderboard th:nth-child(4), #leaderboard td:nth-child(4) {
-    width: 25%;
+    width: 22.5%;
     text-align: right;
+    padding-right: 15px;
 }
 
 #leaderboard th {
@@ -350,6 +355,17 @@ body {
 
 .rank-3 {
     color: #cd7f32;
+}
+
+/* Surbrillance pour les scores du joueur connecté */
+.current-player-highlight {
+    background: linear-gradient(90deg, rgba(67, 233, 123, 0.2), rgba(76, 201, 240, 0.2));
+    border-left: 3px solid #43e97b;
+    font-weight: 600;
+}
+
+.current-player-highlight td {
+    color: #43e97b !important;
 }
 
 /* CENTRE PRINCIPAL */
