@@ -1,0 +1,10 @@
+# Image de base Node.js
+FROM node:22.22.0
+
+# Définir le dossier de travail
+COPY . /app
+WORKDIR /app
+RUN npm install
+
+# Lancer l'application
+CMD ["sh", "-c", "npm install && node server.js"]
