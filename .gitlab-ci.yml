@@ -67,8 +67,10 @@ build-job:
 test-job1:
   stage: test
   script:
-    - 'echo "This job tests something"'
-    - 'echo "Quick check done."'
+    - echo "🧪 START JEST TESTS (test-job1)"
+    - npm ci
+    - npm run test:ci
+    - echo "✅ END JEST TESTS (test-job1)"
 
 # ================================
 # JOB : TEST 2
@@ -77,10 +79,10 @@ test-job1:
 test-job2:
   stage: test
   script:
-    - 'echo "This job tests something, but takes more time than test-job1."'
-    - 'echo "Simulating a longer test..."'
-    - 'sleep 20'
-    - 'echo "Long test done."'
+    - echo "🧪 START JEST TESTS (test-job1)"
+    - npm ci
+    - npm run test:ci
+    - echo "✅ END JEST TESTS (test-job1)"
 
 # ================================
 # JOB : DEPLOY
