@@ -5,12 +5,15 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "jest", // run les test jest
+    "test:ci": "jest --ci --runInBand" // run les tests jest en CI un par un
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "eslint": "^9.39.2",
-    "globals": "^17.0.0"
+    "globals": "^17.0.0",
+    "jest": "^30.2.0"
   },
   "dependencies": {
     "express": "^5.2.1"
