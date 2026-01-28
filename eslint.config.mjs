@@ -24,6 +24,16 @@ export default [
       sourceType: "module",
     },
   },
+
+  // TESTS (Jest)
+  {
+    files: ["**/tests/**/*.js", "**/*.test.js", "**/*.spec.js"],
+    languageOptions: {
+      globals: {
+        ...globals.jest, // expect, test, describe, beforeEach, etc.
+      },
+    },
+  },
 ];
 
 
