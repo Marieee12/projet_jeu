@@ -1,4 +1,3 @@
-// player/session.js
 const LS_PLAYER = "bubbleShooter.playerName";
 
 export function getPlayerName() {
