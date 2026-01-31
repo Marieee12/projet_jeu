@@ -25,6 +25,9 @@ function payload(level, event, data = {}) {
 }
 
 function sendToServer(obj) {
+  // en test / node : fetch peut ne pas exister
+  if (typeof fetch !== "function") return;
+
   fetch("/log", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
