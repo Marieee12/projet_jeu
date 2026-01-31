@@ -1,4 +1,5 @@
-// leaderboard/leaderboard.js
+import { logInfo, logWarn, logError } from "./logger.js";
+
 const LS_LEADERBOARD = "bubbleShooter.leaderboard";
 
 export function formatTime(sec) {
@@ -25,7 +26,15 @@ function seedLeaderboardFromLandingTable() {
 }
 
 function saveLeaderboard(lb) {
-  localStorage.setItem(LS_LEADERBOARD, JSON.stringify(lb));
+  try {
+    localStorage.setItem(LS_LEADERBOARD, JSON.stringify(lb));
+    logInfo("storage_write_ok", { key: LS_LEADERBOARD, entries: lb.length });
+  } catch (e) {
+    logError("storage_write_failed", {
+      key: LS_LEADERBOARD,
+      message: e instanceof Error ? e.message : String(e),
+    });
+  }
 }
 
 function loadLeaderboard() {
@@ -34,12 +43,25 @@ function loadLeaderboard() {
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
-      // Vérifier que ce n'est pas un tableau vide
+
       if (Array.isArray(parsed) && parsed.length > 0) {
+        logInfo("leaderboard_loaded", {
+          source: "localStorage",
+          entries: parsed.length,
+        });
         return parsed;
       }
+
+      // Tableau vide ou mauvais format
+      logWarn("leaderboard_empty_or_invalid", {
+        source: "localStorage",
+      });
+
     } catch (e) {
-  console.warn("Leaderboard invalide dans le localStorage", e);
+      logError("leaderboard_parse_failed", {
+        key: LS_LEADERBOARD,
+        message: e instanceof Error ? e.message : String(e),
+      });
     }
   }
 
@@ -56,6 +78,11 @@ function loadLeaderboard() {
       { pseudo: "Emma", score: 2930, timeSec: 220, createdAt: Date.now() - 1000 }
     ];
     localStorage.setItem(LS_LEADERBOARD, JSON.stringify(defaultData));
+    // LOG
+    logInfo("leaderboard_seeded", {
+      source: "default_data",
+      entries: defaultData.length,
+    });
     return defaultData;
   }
   
@@ -74,7 +101,8 @@ function sortLeaderboard(lb) {
 }
 
 export function recordWinAndGetRank({ pseudo, score, timeSec }) {
-  console.log("Recording score:", { pseudo, score, timeSec });
+  // LOG de tenter d'enregistrer
+  logInfo("score_record_attempt", { pseudo, score, timeSec });
   
   const lb = loadLeaderboard();
   const entry = { pseudo, score, timeSec, createdAt: Date.now() };
@@ -85,7 +113,10 @@ export function recordWinAndGetRank({ pseudo, score, timeSec }) {
   const trimmed = lb.slice(0, 200);
   saveLeaderboard(trimmed);
   
-  console.log("Leaderboard saved with", trimmed.length, "entries");
+  // LOG du leadervoard sauvegardé
+  logInfo("leaderboard_saved", {
+    totalEntries: trimmed.length,
+    });
 
   const idx = trimmed.findIndex(
     (x) =>
@@ -94,6 +125,17 @@ export function recordWinAndGetRank({ pseudo, score, timeSec }) {
       x.timeSec === entry.timeSec &&
       x.createdAt === entry.createdAt
   );
+
+  // LOG score enregistré
+  const rank = idx === -1 ? 1 : idx + 1;
+
+  logInfo("score_recorded", {
+    pseudo,
+    score,
+    timeSec,
+    rank,
+    totalEntries: trimmed.length,
+  });
 
   return { lb: trimmed, index: idx === -1 ? 0 : idx };
 }
