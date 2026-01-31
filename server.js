@@ -8,9 +8,25 @@ const PORT = process.env.PORT || 3010;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// static files
+// SON parser
+app.use(express.json({ limit: "32kb" }));
+
+// Endpoint logs 
+app.post("/log", (req, res) => {
+  const event = req.body;
+
+  if (!event || typeof event !== "object") {
+    return res.status(400).json({ ok: false });
+  }
+
+  console.log(JSON.stringify({ origin: "frontend", ...event }));
+  return res.sendStatus(204);
+});
+
+// Static file
 app.use(express.static(__dirname));
 
+// SPA fallback
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
