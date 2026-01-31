@@ -1,4 +1,4 @@
-import { logInfo, logError } from "./logger.js";
+import { logInfo, logError } from "../logger.js";
 
 const LS_PLAYER = "bubbleShooter.playerName";
 

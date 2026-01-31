@@ -1,4 +1,4 @@
-import { logInfo, logWarn, logError } from "./logger.js";
+import { logInfo, logWarn, logError } from "../logger.js";
 
 const LS_LEADERBOARD = "bubbleShooter.leaderboard";
 
