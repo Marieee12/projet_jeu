@@ -4,13 +4,16 @@ const SESSION_KEY = "bs.sessionId";
 function getSessionId() {
   let sid = sessionStorage.getItem(SESSION_KEY);
   if (!sid) {
-    sid = (crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`);
+    sid =
+      crypto?.randomUUID?.() ??
+      `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
     sessionStorage.setItem(SESSION_KEY, sid);
   }
   return sid;
 }
 
-function basePayload(level, event, data = {}) {
+function payload(level, event, data = {}) {
   return {
     app: APP,
     level,
@@ -21,14 +24,29 @@ function basePayload(level, event, data = {}) {
   };
 }
 
+function sendToServer(obj) {
+  fetch("/log", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(obj),
+    keepalive: true,
+  }).catch(() => {});
+}
+
 export function logInfo(event, data) {
-  console.log(JSON.stringify(basePayload("info", event, data)));
+  const obj = payload("info", event, data);
+  console.log(JSON.stringify(obj)); // navigateur
+  sendToServer(obj); // server -> render -> betterstack
 }
 
 export function logWarn(event, data) {
-  console.warn(JSON.stringify(basePayload("warn", event, data)));
+  const obj = payload("warn", event, data);
+  console.warn(JSON.stringify(obj));
+  sendToServer(obj);
 }
 
 export function logError(event, data) {
-  console.error(JSON.stringify(basePayload("error", event, data)));
+  const obj = payload("error", event, data);
+  console.error(JSON.stringify(obj));
+  sendToServer(obj);
 }
