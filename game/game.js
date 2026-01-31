@@ -1,5 +1,5 @@
 import { Bubble } from "./bubble.js";
-import { logInfo } from "./logger.js";
+import { logInfo } from "../logger.js";
 
 export class Game {
   constructor(canvas, ctx, levelConfig) {
