@@ -46,14 +46,13 @@ default:
 build-job:
   stage: build
   script:
-    - 'echo "Hello, $GITLAB_USER_LOGIN!"'     # Utilisateur GitLab
-    - 'echo "Project: $PROJECT_NAME"'         # Variable personnalisée
-    - 'echo "Branch: $CI_COMMIT_BRANCH"'      # Branche courante
-    - 'echo "Commit: $CI_COMMIT_SHORT_SHA"'   # Commit courant
-    - 'echo "Listing files:"'                 # Affichage du dépôt
+    - 'echo "Hello, $GITLAB_USER_LOGIN!"'
+    - 'echo "Project: $PROJECT_NAME"'
+    - 'echo "Branch: $CI_COMMIT_BRANCH"'
+    - 'echo "Commit: $CI_COMMIT_SHORT_SHA"'
+    - 'echo "Listing files:"'
     - 'ls -la'
 
-  # Fichiers sauvegardés après le job
   artifacts:
     expire_in: 1 week
     paths:
@@ -62,7 +61,7 @@ build-job:
 
 # ================================
 # JOB : TEST 1
-# Test rapide (simulation)
+# Test Jest
 # ================================
 test-job1:
   stage: test
@@ -73,35 +72,38 @@ test-job1:
     - echo "✅ END JEST TESTS (test-job1)"
 
 # ================================
-# JOB : TEST 2
-# Test plus long (simulation)
+# JOB : DEPLOY RENDER
+# Build & push de l'image Docker vers le GitLab Container Registry
+# Render (Auto Deploy) récupère ensuite automatiquement l'image :app:latest
 # ================================
-test-job2:
-  stage: test
-  script:
-    - echo "🧪 START JEST TESTS (test-job1)"
-    - npm ci
-    - npm run test:ci
-    - echo "✅ END JEST TESTS (test-job1)"
-
-# ================================
-# JOB : DEPLOY
-# Déploiement simulé (manuel)
-# ================================
-deploy-prod:
+deploy-render:
   stage: deploy
+
+  image: docker:27
+  services:
+    - docker:27-dind
+
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: overlay2
+
+    IMAGE_NAME: "app"
+    IMAGE_TAG: "latest"
+    DOCKERFILE: "DockerfileProd"
+
   script:
-    - 'echo "This job deploys something from the $CI_COMMIT_BRANCH branch."'
-    - 'echo "Deploy site: $DEPLOY_SITE"'
-    - 'echo "Deploy placeholder (no real deploy)"'
+    - echo "🔐 Login to GitLab Container Registry"
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
 
-  environment: production                 # Environnement GitLab
-  when: manual                            # Lancement manuel
+    - echo "🐳 Build Docker image"
+    - docker build -f "$DOCKERFILE" -t "$CI_REGISTRY_IMAGE/$IMAGE_NAME:$IMAGE_TAG" .
 
-  # Règles d'exécution
+    - echo "📤 Push Docker image"
+    - docker push "$CI_REGISTRY_IMAGE/$IMAGE_NAME:$IMAGE_TAG"
+
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
+      when: on_success
     - when: never
 
 # ================================
