@@ -1,11 +1,19 @@
+import { logInfo, logError } from "./logger.js";
+
 const LS_PLAYER = "bubbleShooter.playerName";
 
 export function getPlayerName() {
   return localStorage.getItem(LS_PLAYER) || "";
 }
 export function setPlayerName(name) {
-  localStorage.setItem(LS_PLAYER, name.trim());
-}
+  try {
+    localStorage.setItem(LS_PLAYER, name.trim());
+    logInfo("player_name_saved", { length: name.trim().length });
+  } catch (e) {
+    logError("storage_write_failed", { key: LS_PLAYER, message: e instanceof Error ? e.message : String(e) });
+  }
+} // je log plutôt la length du pseudo que le pseudo entier pour pas stocker des infos perso dans les logs
+
 export function clearPlayerName() {
   localStorage.removeItem(LS_PLAYER);
 }
