@@ -1,0 +1,28 @@
+services:
+  app-dev:
+    container_name: myapp-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT}:${PORT}"
+    environment:
+      NODE_ENV: development
+      PORT: ${PORT}
+    volumes:
+      - .:/app
+    profiles: ["dev"]
+
+  app-prod:
+    container_name: myapp-prod
+    build:
+      context: .
+      dockerfile: DockerfileProd
+    ports:
+      - "${PORT}:${PORT}"
+    environment:
+      NODE_ENV: production
+      PORT: ${PORT}
+    restart: unless-stopped
+    profiles: ["prod"]
+
