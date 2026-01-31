@@ -1,4 +1,5 @@
 import { Bubble } from "./bubble.js";
+import { logInfo } from "./logger.js";
 
 export class Game {
   constructor(canvas, ctx, levelConfig) {
@@ -58,6 +59,17 @@ export class Game {
     this.nextColor = this.getRandomColorFromExisting();
 
     this.bubble = new Bubble(this.startX, this.shooterY, this.radius, this.currentColor);
+
+    // LOGS
+    logInfo("game_init", {
+      rows: this.rows,
+      cols: this.cols,
+      radius: this.radius,
+      turnsPerDrop: this.turnsPerDrop,
+      shotSpeed: this.shotSpeed,
+      pattern: this.level?.spawn?.pattern,
+    });
+
   }
 
   // =========================
@@ -578,8 +590,14 @@ export class Game {
     if (!this.hasAnyBubble()) {
       this.isWin = true;
       this.isOver = true;
+      // LOG
+      logInfo("game_over", { outcome: "win", turnCount: this.turnCount });
+
     } else if (this.checkGameOverLine()) {
       this.isOver = true;
+      // LOG
+      logInfo("game_over", { outcome: "lose", reason: "danger_line", turnCount: this.turnCount });
+
     }
 
     // nouvelle bulle : next -> current, puis reroll next
@@ -687,6 +705,14 @@ export class Game {
 
     this.bubble.vx = Math.cos(angle) * this.shotSpeed;
     this.bubble.vy = Math.sin(angle) * this.shotSpeed;
+
+    // LOGS
+    logInfo("shot_fired", {
+      turnCount: this.turnCount,
+      angle: Math.round(angle * 1000) / 1000,
+      color: this.bubble.color,
+    });
+
   }
 
   // =========================
