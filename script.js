@@ -10,6 +10,10 @@ logInfo("app_loaded", {
   screen: "landing",
 });
 
+logError("test_alert", {
+  message: "this is a test alert"
+});
+
 function hideLoader() {
   logInfo("loader_hidden");
 
