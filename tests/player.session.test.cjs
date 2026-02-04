@@ -1,7 +1,7 @@
 const LS_KEY = "bubbleShooter.playerName";
 
 async function loadModule() {
-  // ✅ Charge ton module ESM depuis un test CommonJS
+
   return await import("../player/session.js");
 }
 
