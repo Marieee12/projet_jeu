@@ -431,26 +431,31 @@ export class Game {
 
   // bulles connectées au plafond => restent, le reste tombe
   getConnectedToTop() {
-    const stack = [];
-    const visited = new Set();
+  const stack = [];
+  const visited = new Set();
 
-    for (let c = 0; c < this.cols; c++) {
-      if (this.grid[0][c]) stack.push({ r: 0, c });
-    }
-
-    while (stack.length) {
-      const { r, c } = stack.pop();
-      const key = `${r},${c}`;
-      if (visited.has(key)) continue;
-      visited.add(key);
-
-      for (const n of this.getNeighbors(r, c)) {
-        if (this.grid[n.r][n.c]) stack.push(n); // bubble OU entity
-      }
-    }
-
-    return visited;
+  // on ne démarre que depuis les Bubble de la ligne 0
+  for (let c = 0; c < this.cols; c++) {
+    const cell = this.grid[0][c];
+    if (cell instanceof Bubble) stack.push({ r: 0, c });
   }
+
+  while (stack.length) {
+    const { r, c } = stack.pop();
+    const key = `${r},${c}`;
+    if (visited.has(key)) continue;
+    visited.add(key);
+
+    for (const n of this.getNeighbors(r, c)) {
+      const next = this.grid[n.r][n.c];
+      // connectivité UNIQUEMENT via des Bubble
+      if (next instanceof Bubble) stack.push({ r: n.r, c: n.c });
+    }
+  }
+
+  return visited;
+}
+
 
   dropFloatingBubbles() {
     const connected = this.getConnectedToTop();
@@ -557,28 +562,37 @@ export class Game {
     this.bubble = null;
 
     // match
-    const group = this.findConnectedSameColor(bestRow, bestCol);
-    let removed = 0;
-    let fallen = 0;
+    // match
+const group = this.findConnectedSameColor(bestRow, bestCol);
+let removed = 0;
+let fallen = 0;
 
-    if (group.length >= 3) {
-      removed = group.length;
-      this.removeCells(group);
-      fallen = this.dropFloatingBubbles();
-    }
+let didRemoveSomething = false;
 
-    // ⭐ Bonus si on "attrape" une star adjacente (simple)
-    // Si tu veux : une star donne des points quand une bulle est posée à côté
-    const neighbors = this.getNeighbors(bestRow, bestCol);
-    for (const n of neighbors) {
-      const cell = this.grid[n.r][n.c];
-      if (cell && cell.type === "star") {
-        const defaultPts = this.level?.scoring?.starBonusDefault ?? 500;
-        starBonus += typeof cell.points === "number" ? cell.points : defaultPts;
-        // on consomme la star
-        this.grid[n.r][n.c] = null;
-      }
-    }
+if (group.length >= 3) {
+  removed = group.length;
+  this.removeCells(group);
+  didRemoveSomething = true;
+}
+
+// Bonus si on "attrape" une star adjacente
+const neighbors = this.getNeighbors(bestRow, bestCol);
+for (const n of neighbors) {
+  const cell = this.grid[n.r][n.c];
+  if (cell && cell.type === "star") {
+    const defaultPts = this.level?.scoring?.starBonusDefault ?? 500;
+    starBonus += typeof cell.points === "number" ? cell.points : defaultPts;
+    this.grid[n.r][n.c] = null; // consume star
+    didRemoveSomething = true;
+  }
+}
+
+// IMPORTANT : si on a retiré quelque chose (match OU star),
+// on doit recalculer les bulles flottantes
+if (didRemoveSomething) {
+  fallen += this.dropFloatingBubbles();
+}
+
 
     // tir compté
     this.turnCount++;

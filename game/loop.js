@@ -1,4 +1,3 @@
-// game/loop.js
 import { Game } from "./game.js";
 import { loadLevel } from "../levels/loader-levels.js";
 import { showLevelIntro } from "../ui/levelIntro.js";
@@ -96,7 +95,7 @@ export function createGameController(dom, modals) {
   async function initializeGame({ showIntro = true } = {}) {
     stopGame();
     // démarre au niveau 1, reset stats
-    await startLevel(1, { showIntro, resetStats: true });
+    await startLevel(3, { showIntro, resetStats: true });
   }
 
   function update() {
