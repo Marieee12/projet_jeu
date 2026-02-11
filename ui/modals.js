@@ -18,15 +18,6 @@ export function bindModals(dom, callbacks) {
   }
 
   dom.closeRulesBtn?.addEventListener("click", closeRulesModal);
-  dom.startFromModalBtn?.addEventListener("click", () => {
-    closeRulesModal();
-    callbacks?.onStartFromRules?.();
-  });
-
-  dom.startFromModalButton?.addEventListener("click", () => {
-    closeRulesModal();
-    callbacks?.onStartFromRules?.();
-  });
 
   function formatTime(sec) {
     const m = Math.floor(sec / 60);
