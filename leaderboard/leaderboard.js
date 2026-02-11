@@ -8,21 +8,14 @@ export function formatTime(sec) {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-function seedLeaderboardFromLandingTable() {
-  const rows = document.querySelectorAll("#leaderboard tbody tr");
-  const data = [];
-
-  rows.forEach((tr) => {
-    const tds = tr.querySelectorAll("td");
-    if (tds.length < 3) return;
-
-    const pseudo = (tds[1]?.textContent || "").trim();
-    const score = parseInt((tds[2]?.textContent || "0").trim(), 10) || 0;
-
-    data.push({ pseudo, score, timeSec: null, createdAt: Date.now() });
-  });
-
-  return data;
+function seedDefaultLeaderboard() {
+  return [
+    { pseudo: "Alice", score: 3110, timeSec: 180, createdAt: Date.now() - 5000 },
+    { pseudo: "Bob", score: 3030, timeSec: 200, createdAt: Date.now() - 4000 },
+    { pseudo: "Chloé", score: 3000, timeSec: 190, createdAt: Date.now() - 3000 },
+    { pseudo: "David", score: 2980, timeSec: 210, createdAt: Date.now() - 2000 },
+    { pseudo: "Emma", score: 2930, timeSec: 220, createdAt: Date.now() - 1000 },
+  ];
 }
 
 function saveLeaderboard(lb) {
@@ -45,18 +38,11 @@ function loadLeaderboard() {
       const parsed = JSON.parse(raw);
 
       if (Array.isArray(parsed) && parsed.length > 0) {
-        logInfo("leaderboard_loaded", {
-          source: "localStorage",
-          entries: parsed.length,
-        });
+        logInfo("leaderboard_loaded", { source: "localStorage", entries: parsed.length });
         return parsed;
       }
 
-      // Tableau vide ou mauvais format
-      logWarn("leaderboard_empty_or_invalid", {
-        source: "localStorage",
-      });
-
+      logWarn("leaderboard_empty_or_invalid", { source: "localStorage" });
     } catch (e) {
       logError("leaderboard_parse_failed", {
         key: LS_LEADERBOARD,
@@ -65,31 +51,13 @@ function loadLeaderboard() {
     }
   }
 
-  // SEED depuis le HTML
-  const seeded = seedLeaderboardFromLandingTable();
-  
-  // Si le HTML n'a pas de données, créer des données par défaut
-  if (seeded.length === 0) {
-    const defaultData = [
-      { pseudo: "Alice", score: 3110, timeSec: 180, createdAt: Date.now() - 5000 },
-      { pseudo: "Bob", score: 3030, timeSec: 200, createdAt: Date.now() - 4000 },
-      { pseudo: "Chloé", score: 3000, timeSec: 190, createdAt: Date.now() - 3000 },
-      { pseudo: "David", score: 2980, timeSec: 210, createdAt: Date.now() - 2000 },
-      { pseudo: "Emma", score: 2930, timeSec: 220, createdAt: Date.now() - 1000 }
-    ];
-    localStorage.setItem(LS_LEADERBOARD, JSON.stringify(defaultData));
-    // LOG
-    logInfo("leaderboard_seeded", {
-      source: "default_data",
-      entries: defaultData.length,
-    });
-    return defaultData;
-  }
-  
-  localStorage.setItem(LS_LEADERBOARD, JSON.stringify(seeded));
+  // ✅ SEED robuste (ne dépend pas du HTML)
+  const seeded = seedDefaultLeaderboard();
+  saveLeaderboard(seeded);
+
+  logInfo("leaderboard_seeded", { source: "default_data", entries: seeded.length });
   return seeded;
 }
-
 
 function sortLeaderboard(lb) {
   return lb.sort((a, b) => {
@@ -103,7 +71,7 @@ function sortLeaderboard(lb) {
 export function recordWinAndGetRank({ pseudo, score, timeSec }) {
   // LOG de tenter d'enregistrer
   logInfo("score_record_attempt", { pseudo, score, timeSec });
-  
+
   const lb = loadLeaderboard();
   const entry = { pseudo, score, timeSec, createdAt: Date.now() };
 
@@ -112,11 +80,9 @@ export function recordWinAndGetRank({ pseudo, score, timeSec }) {
 
   const trimmed = lb.slice(0, 200);
   saveLeaderboard(trimmed);
-  
+
   // LOG du leadervoard sauvegardé
-  logInfo("leaderboard_saved", {
-    totalEntries: trimmed.length,
-    });
+  logInfo("leaderboard_saved", { totalEntries: trimmed.length });
 
   const idx = trimmed.findIndex(
     (x) =>
@@ -140,10 +106,10 @@ export function recordWinAndGetRank({ pseudo, score, timeSec }) {
   return { lb: trimmed, index: idx === -1 ? 0 : idx };
 }
 
-export function renderWinLeaderboardCentered(dom, lb, playerIndex) {
-  if (!dom.winTbody) return;
+export function renderLeaderboardCentered(tbodyEl, lb, playerIndex) {
+  if (!tbodyEl) return;
 
-  dom.winTbody.innerHTML = "";
+  tbodyEl.innerHTML = "";
 
   lb.forEach((row, i) => {
     const tr = document.createElement("tr");
@@ -163,12 +129,12 @@ export function renderWinLeaderboardCentered(dom, lb, playerIndex) {
       <td style="padding:10px 12px; color:#ffffff; text-align:right;">${timeText}</td>
     `;
 
-    dom.winTbody.appendChild(tr);
+    tbodyEl.appendChild(tr);
   });
 
   // centre la vue sur le joueur APRÈS render
   requestAnimationFrame(() => {
-    const playerRow = dom.winTbody.querySelector('tr[data-player-row="1"]');
+    const playerRow = tbodyEl.querySelector('tr[data-player-row="1"]');
     if (playerRow) {
       playerRow.scrollIntoView({
         block: "center",
@@ -178,25 +144,27 @@ export function renderWinLeaderboardCentered(dom, lb, playerIndex) {
   });
 }
 
+export function renderWinLeaderboardCentered(dom, lb, playerIndex) {
+  renderLeaderboardCentered(dom.winTbody, lb, playerIndex);
+}
+
 export function getTopLeaderboard(limit = 5) {
-  const lb = loadLeaderboard(); // Utiliser loadLeaderboard au lieu de lire directement localStorage
+  const lb = loadLeaderboard();
   return lb.slice(0, limit);
 }
 
 export function getPlayerScores(pseudo, limit = 5) {
   const lb = loadLeaderboard();
-  
-  // Filtrer les scores du joueur spécifique
-  const playerScores = lb.filter(entry => entry.pseudo === pseudo);
-  
-  // Trier par score décroissant, puis par temps
+
+  const playerScores = lb.filter((entry) => entry.pseudo === pseudo);
+
   playerScores.sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
     const at = a.timeSec ?? Number.POSITIVE_INFINITY;
     const bt = b.timeSec ?? Number.POSITIVE_INFINITY;
     return at - bt;
   });
-  
+
   return playerScores.slice(0, limit);
 }
 

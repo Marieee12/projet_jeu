@@ -1,5 +1,8 @@
 import { getPlayerName } from "../player/session.js";
-import { recordWinAndGetRank, renderWinLeaderboardCentered } from "../leaderboard/leaderboard.js";
+import {
+  recordWinAndGetRank,
+  renderLeaderboardCentered,
+} from "../leaderboard/leaderboard.js";
 import { renderLandingLeaderboard } from "./landingleaderboard.js";
 
 export function bindModals(dom, callbacks) {
@@ -25,26 +28,40 @@ export function bindModals(dom, callbacks) {
     callbacks?.onStartFromRules?.();
   });
 
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${String(s).padStart(2, "0")}`;
+  }
+
   // --- game over ---
   function openGameOverModal({ score, timeSec, levelId } = {}) {
-    // Enregistrer le score même en cas de défaite
+    const pseudo = getPlayerName() || "Joueur";
+
+    // infos joueur
+    if (dom.gameOverPlayerEl) dom.gameOverPlayerEl.textContent = pseudo;
+    if (dom.gameOverScoreEl) dom.gameOverScoreEl.textContent = String(score ?? 0);
+    if (dom.gameOverTimeEl) dom.gameOverTimeEl.textContent = formatTime(timeSec ?? 0);
+
+    // Leaderboard + rang + centrage
     if (score !== undefined && timeSec !== undefined) {
-      const pseudo = getPlayerName() || "Joueur";
-      recordWinAndGetRank({ pseudo, score, timeSec });
+      const { lb, index } = recordWinAndGetRank({ pseudo, score, timeSec });
+
+      if (dom.gameOverRankEl) dom.gameOverRankEl.textContent = `#${index + 1}`;
+      renderLeaderboardCentered(dom.gameOverLeaderboardBody, lb, index);
+
       // Actualiser le classement de la landing page
       renderLandingLeaderboard(dom);
+    } else {
+      if (dom.gameOverRankEl) dom.gameOverRankEl.textContent = "#?";
     }
 
-    // ✅ UI : au niveau 1, pas besoin du bouton "Depuis le début" (c'est déjà le début)
+    // UI : au niveau 1, pas besoin du bouton "Depuis le début" (c'est déjà le début)
     if (levelId === 1) {
       dom.restartFromBeginningBtn?.classList.add("hidden");
-
-      // texte plus clair au niveau 1
       if (dom.restartGameBtn) dom.restartGameBtn.textContent = "🔁 Recommencer";
     } else {
       dom.restartFromBeginningBtn?.classList.remove("hidden");
-
-      // texte plus explicite dès niveau 2+
       if (dom.restartGameBtn) dom.restartGameBtn.textContent = "🔁 Rejouer ce niveau";
     }
 
@@ -57,23 +74,20 @@ export function bindModals(dom, callbacks) {
     document.body.style.overflow = "auto";
   }
 
-  // ✅ Bouton existant : "Recommencer"
-  // => maintenant, il rejoue le même niveau (si dispo), sinon fallback ancien onRestart
+  // Bouton existant : "Recommencer"
   dom.restartGameBtn?.addEventListener("click", () => {
     closeGameOverModal();
 
-    // priorité : rester sur le même niveau
+    // rester sur le même niveau
     if (callbacks?.onRestartSameLevel) {
       callbacks.onRestartSameLevel();
       return;
     }
 
-    // fallback compat (ancien comportement)
     callbacks?.onRestart?.();
   });
 
-  // ✅ Nouveau bouton optionnel : "Recommencer depuis le début"
-  // ⚠️ Il faut l'ajouter dans dom.js + HTML (voir notes en dessous)
+  // boutn: "Recommencer depuis le début"
   dom.restartFromBeginningBtn?.addEventListener("click", () => {
     closeGameOverModal();
     callbacks?.onRestartFromBeginning?.();
@@ -84,7 +98,9 @@ export function bindModals(dom, callbacks) {
     callbacks?.onQuit?.();
   });
 
-  dom.gameOverModal?.querySelector(".modal-overlay")?.addEventListener("click", closeGameOverModal);
+  dom.gameOverModal
+    ?.querySelector(".modal-overlay")
+    ?.addEventListener("click", closeGameOverModal);
 
   // --- win ---
   function openWinModal({ score, timeSec }) {
@@ -94,10 +110,10 @@ export function bindModals(dom, callbacks) {
     if (dom.winScoreEl) dom.winScoreEl.textContent = String(score);
     if (dom.winTimeEl) dom.winTimeEl.textContent = formatTime(timeSec);
 
-    // Leaderboard
     const { lb, index } = recordWinAndGetRank({ pseudo, score, timeSec });
+
     if (dom.winRankEl) dom.winRankEl.textContent = `#${index + 1}`;
-    renderWinLeaderboardCentered(dom, lb, index);
+    renderLeaderboardCentered(dom.winTbody, lb, index);
 
     // Actualiser le classement de la landing page
     renderLandingLeaderboard(dom);
@@ -123,18 +139,13 @@ export function bindModals(dom, callbacks) {
 
   dom.winModal?.querySelector(".modal-overlay")?.addEventListener("click", closeWinModal);
 
-  function formatTime(sec) {
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return `${m}:${String(s).padStart(2, "0")}`;
-  }
-
   return {
     openGameOverModal,
     openWinModal,
     closeRulesModal,
   };
 }
+
 
 
 
