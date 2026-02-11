@@ -95,7 +95,7 @@ export function createGameController(dom, modals) {
   async function initializeGame({ showIntro = true } = {}) {
     stopGame();
     // démarre au niveau 1, reset stats
-    await startLevel(1, { showIntro, resetStats: true });
+    await startLevel(4, { showIntro, resetStats: true });
   }
 
   function update() {
