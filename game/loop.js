@@ -10,7 +10,7 @@ export function createGameController(dom, modals) {
   let running = false;
   let levelId = 1;
 
-  const TOTAL_LEVELS = 3;
+  const TOTAL_LEVELS = 4;
 
   // SCORE / TIME (par niveau)
   let score = 0;
@@ -95,7 +95,13 @@ export function createGameController(dom, modals) {
   async function initializeGame({ showIntro = true } = {}) {
     stopGame();
     // démarre au niveau 1, reset stats
-    await startLevel(4, { showIntro, resetStats: true });
+    await startLevel(1, { showIntro, resetStats: true });
+  }
+
+  // ✅ Perdu : rejouer le même niveau (reset stats)
+  async function restartLevel({ showIntro = false } = {}) {
+    stopGame();
+    await startLevel(levelId, { showIntro, resetStats: true });
   }
 
   function update() {
@@ -122,7 +128,7 @@ export function createGameController(dom, modals) {
       stopGame();
 
       if (game.isWin) {
-        // Win niveau 1/2 => niveau suivant
+        // Win niveau 1/2/3 => niveau suivant
         if (hasNextLevel()) {
           goToNextLevel();
           return;
@@ -134,7 +140,7 @@ export function createGameController(dom, modals) {
       }
 
       // Game over
-      modals?.openGameOverModal?.({ score, timeSec });
+      modals?.openGameOverModal?.({ score, timeSec, levelId });
     }
   }
 
@@ -147,14 +153,14 @@ export function createGameController(dom, modals) {
 
   function updateBallColors() {
     if (!game) return;
-    
+
     const colors = game.getCurrentColors();
-    
+
     // Mettre à jour l'affichage de la balle actuelle
     if (dom.currentBallDisplay) {
       dom.currentBallDisplay.style.backgroundColor = colors.current;
     }
-    
+
     // Mettre à jour l'affichage de la prochaine balle
     if (dom.nextBallDisplay) {
       dom.nextBallDisplay.style.backgroundColor = colors.next;
@@ -167,7 +173,6 @@ export function createGameController(dom, modals) {
     if (running) requestAnimationFrame(gameLoop);
   }
 
-  
   function shoot(angle) {
     if (!running || !game) return;
     game.shoot(angle);
@@ -233,10 +238,10 @@ export function createGameController(dom, modals) {
     });
   }
 
-
   return {
     initializeGame, // lance niveau 1
-    startLevel,     
+    restartLevel, // rejoue le même niveau
+    startLevel,
     stopGame,
     bindInputs,
 
@@ -248,6 +253,7 @@ export function createGameController(dom, modals) {
     isRunning: () => running,
   };
 }
+
 
 
 

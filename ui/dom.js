@@ -23,6 +23,7 @@ export const dom = {
   rulesModal: document.getElementById("rules-modal"),
   closeRulesBtn: document.getElementById("close-rules-modal"),
   startFromModalBtn: document.getElementById("start-from-modal"),
+  restartFromBeginningBtn: document.getElementById("restart-from-beginning"),
 
   // Level intro loader
   levelIntro: document.getElementById("level-intro"),

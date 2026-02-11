@@ -172,7 +172,7 @@
                     <div id="current-ball" class="color-ball" style="background-color: #ff4d4d;"></div>
                 </div>
             </div>
-            
+
             <div class="palette-section">
                 <h3>Prochaine balle :</h3>
                 <div id="next-ball-display" class="ball-display">
@@ -237,6 +237,7 @@
             </button>
         </div>
     </div>
+
     <!-- MODALS -->
     <div id="gameover-modal" class="modal hidden">
         <div class="modal-overlay"></div>
@@ -247,10 +248,15 @@
                 Les bulles ont atteint la ligne limite.
             </p>
 
-            <div style="display:flex; gap:12px; justify-content:center; margin-top:18px;">
+            <div style="display:flex; gap:12px; justify-content:center; margin-top:18px; flex-wrap:wrap;">
                 <button id="restart-game" class="modal-button">
-                    🔁 Recommencer
+                    🔁 Rejouer ce niveau
                 </button>
+
+                <button id="restart-from-beginning" class="modal-button" style="opacity:0.95;">
+                    🏁 Depuis le début
+                </button>
+
                 <button id="quit-game" class="modal-button" style="opacity:0.9;">
                     🏠 Quitter
                 </button>
@@ -298,8 +304,6 @@
             </div>
         </div>
     </div>
-
-
 
     <script type="module" src="script.js"></script>
 </body>

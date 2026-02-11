@@ -21,16 +21,20 @@ function hideLoader() {
   dom.landingPage.classList.remove("hidden");
 
   setTimeout(() => {
-    document.querySelector(".panel-left")?.style && (document.querySelector(".panel-left").style.opacity = "1");
-    document.querySelector(".panel-right")?.style && (document.querySelector(".panel-right").style.opacity = "1");
+    document.querySelector(".panel-left")?.style &&
+      (document.querySelector(".panel-left").style.opacity = "1");
+    document.querySelector(".panel-right")?.style &&
+      (document.querySelector(".panel-right").style.opacity = "1");
   }, 100);
 
   player.refreshPlayerUI();
   renderLandingLeaderboard(dom);
-
 }
 
 const player = bindPlayerUI(dom);
+
+// ✅ important : on a besoin du controller dans les callbacks modals
+let gameController = null;
 
 const modals = bindModals(dom, {
   onStartFromRules: () => {
@@ -39,16 +43,27 @@ const modals = bindModals(dom, {
     dom.gameScreen.classList.remove("hidden");
     gameController.initializeGame();
   },
-  onRestart: () => gameController.initializeGame({ showIntro: false }),
+
+  // GAME OVER — Rejouer le même niveau
+  onRestartSameLevel: () => {
+    gameController.restartLevel({ showIntro: false });
+  },
+
+  // GAME OVER — Recommencer depuis le début
+  onRestartFromBeginning: () => {
+    gameController.initializeGame({ showIntro: false });
+  },
+
   onQuit: () => {
     logInfo("game_quit_clicked");
     gameController.stopGame();
     dom.gameScreen.classList.add("hidden");
     dom.landingPage.classList.remove("hidden");
-    dom.landingPage.classList.remove("hidden");
     renderLandingLeaderboard(dom);
   },
+
   onWinRestart: () => gameController.initializeGame({ showIntro: false }),
+
   onWinQuit: () => {
     logInfo("game_win_quit_clicked");
     gameController.stopGame();
@@ -58,14 +73,16 @@ const modals = bindModals(dom, {
   },
 });
 
-const gameController = createGameController(dom, modals);
+gameController = createGameController(dom, modals);
 gameController.bindInputs();
 
 dom.startButton?.addEventListener("click", () => {
   logInfo("game_start_clicked", {
     hasPlayerName: !!getPlayerName(),
   });
+
   if (!getPlayerName()) return;
+
   dom.landingPage.classList.add("hidden");
   dom.gameScreen.classList.remove("hidden");
   gameController.initializeGame();
@@ -89,6 +106,8 @@ window.addEventListener("unhandledrejection", (e) => {
     reason: String(e.reason),
   });
 });
+
+
 
 
 
