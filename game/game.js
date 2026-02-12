@@ -10,6 +10,8 @@ import {
   dropFloatingBubbles,
 } from "./gridLogic.js";
 import { attachBubbleToGridFlow } from "./attachFlow.js";
+import { initGridSpawn, spawnEntitiesOnGrid } from "./spawnLogic.js";
+
 
 export class Game {
   constructor(canvas, ctx, levelConfig) {
@@ -85,86 +87,16 @@ export class Game {
   // INITIALISATION GRILLE (SPAWN)
   // =========================
   initGrid(spawn) {
-    const filledRows = spawn.initialFilledRows;
-    const pattern = spawn.pattern;
-    const chance = spawn.randomFillChance ?? 1;
-
-    for (let row = 0; row < this.rows; row++) {
-      this.grid[row] = [];
-      for (let col = 0; col < this.cols; col++) {
-        if (row >= filledRows) {
-          this.grid[row][col] = null;
-          continue;
-        }
-
-        // Pattern : lignes pleines
-        if (pattern === "rows_full") {
-          // randomFillChance permet aussi de créer des "trous" si < 1
-          if (Math.random() > chance) {
-            this.grid[row][col] = null;
-            continue;
-          }
-
-          const center = this.getCellCenter(row, col);
-          const color = this.colors[col % this.colors.length];
-          this.grid[row][col] = new Bubble(center.x, center.y, this.radius, color);
-          continue;
-        }
-
-        // Pattern : aléatoire clairsemé
-        if (pattern === "random_sparse") {
-          if (Math.random() <= chance) {
-            const center = this.getCellCenter(row, col);
-            const color = this.colors[Math.floor(Math.random() * this.colors.length)];
-            this.grid[row][col] = new Bubble(center.x, center.y, this.radius, color);
-          } else {
-            this.grid[row][col] = null;
-          }
-          continue;
-        }
-
-        // fallback : si pattern inconnu => comportement "rows_full"
-        const center = this.getCellCenter(row, col);
-        const color = this.colors[col % this.colors.length];
-        this.grid[row][col] = new Bubble(center.x, center.y, this.radius, color);
-      }
-    }
+    initGridSpawn(this, spawn);
   }
 
   // =========================
   // ENTITIES SPAWN
   // =========================
   spawnEntities(entities) {
-    for (const e of entities) {
-      const row = e.row;
-      const col = e.col;
-      if (row < 0 || row >= this.rows || col < 0 || col >= this.cols) continue;
-
-      const center = this.getCellCenter(row, col);
-
-      if (e.type === "block") {
-        // bloc indestructible : occupe une case de la grille
-        this.grid[row][col] = {
-          type: "block",
-          x: center.x,
-          y: center.y,
-          radius: this.radius,
-          indestructible: true,
-          shape: e.shape || "square",
-        };
-      }
-
-      if (e.type === "star") {
-        this.grid[row][col] = {
-          type: "star",
-          x: center.x,
-          y: center.y,
-          radius: this.radius,
-          points: typeof e.points === "number" ? e.points : null,
-        };
-      }
-    }
+    spawnEntitiesOnGrid(this, entities);
   }
+
 
   // =========================
   // HELPERS
