@@ -51,7 +51,7 @@ function loadLeaderboard() {
     }
   }
 
-  // ✅ SEED robuste (ne dépend pas du HTML)
+  // SEED 
   const seeded = seedDefaultLeaderboard();
   saveLeaderboard(seeded);
 
