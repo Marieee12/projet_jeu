@@ -1,16 +1,15 @@
 import { Bubble } from "./bubble.js";
 import { logInfo } from "../logger.js";
-
 import { drawBackground, drawDangerLine, drawGrid } from "./renderer.js";
 import {
   getNeighbors,
   getExistingColors,
   getConnectedToTop,
-  hasAnyBubble,
   removeCells,
   findConnectedSameColor,
   dropFloatingBubbles,
 } from "./gridLogic.js";
+import { attachBubbleToGridFlow } from "./attachFlow.js";
 
 export class Game {
   constructor(canvas, ctx, levelConfig) {
@@ -358,140 +357,7 @@ export class Game {
   // SNAP / ATTACH
   // =========================
   attachBubbleToGrid(collision) {
-    if (!this.bubble) return { removed: 0, fallen: 0, starBonus: 0 };
-
-    const bx = this.bubble.x;
-    const by = this.bubble.y;
-
-    let bestRow = null;
-    let bestCol = null;
-    let bestD2 = Infinity;
-
-    let starBonus = 0;
-    let removed = 0;
-    let fallen = 0;
-
-    const dist2 = (x1, y1, x2, y2) => {
-      const dx = x1 - x2;
-      const dy = y1 - y2;
-      return dx * dx + dy * dy;
-    };
-
-    const tryCells = (cells) => {
-      for (const { r, c } of cells) {
-        if (this.grid[r][c] !== null) continue;
-        const center = this.getCellCenter(r, c);
-        const d2 = dist2(bx, by, center.x, center.y);
-        if (d2 < bestD2) {
-          bestD2 = d2;
-          bestRow = r;
-          bestCol = c;
-        }
-      }
-    };
-
-    // 1) Trouver la meilleure case vide
-    if (collision.type === "cell") {
-      const { row, col } = collision;
-      tryCells(this.getNeighbors(row, col));
-    } else {
-      // plafond => ligne 0
-      const row = 0;
-      const candidates = [];
-      for (let c = 0; c < this.cols; c++) {
-        if (this.grid[row][c] === null) {
-          candidates.push({ r: row, c });
-        }
-      }
-      tryCells(candidates);
-    }
-
-    // fallback : plus proche case vide globale
-    if (bestRow === null || bestCol === null) {
-      const allEmpty = [];
-      for (let r = 0; r < this.rows; r++) {
-        for (let c = 0; c < this.cols; c++) {
-          if (this.grid[r][c] === null) {
-            allEmpty.push({ r, c });
-          }
-        }
-      }
-      tryCells(allEmpty);
-    }
-
-    if (bestRow === null || bestCol === null) {
-      this.isOver = true; // grille pleine
-      return { removed: 0, fallen: 0, starBonus: 0 };
-    }
-
-    // 2) Placer la bulle sur la grille
-    const center = this.getCellCenter(bestRow, bestCol);
-    this.bubble.x = center.x;
-    this.bubble.y = center.y;
-    this.bubble.vx = 0;
-    this.bubble.vy = 0;
-
-    this.grid[bestRow][bestCol] = this.bubble;
-    this.bubble = null;
-
-    // 3) Match (>=3) => retire + drop floating (mécanique classique)
-    const group = this.findConnectedSameColor(bestRow, bestCol);
-
-    if (group.length >= 3) {
-      removed = group.length;
-      this.removeCells(group);
-
-      // seulement après un match
-      fallen += this.dropFloatingBubbles();
-    }
-
-    // 4) Star : si adjacent, consommer + détruire la bulle posée
-    //  mais on ne déclenche PAS une chute globale ici
-    let hitStar = false;
-
-    const neighbors = this.getNeighbors(bestRow, bestCol);
-    for (const n of neighbors) {
-      const cell = this.grid[n.r][n.c];
-      if (cell && cell.type === "star") {
-        const defaultPts = this.level?.scoring?.starBonusDefault ?? 500;
-        starBonus += typeof cell.points === "number" ? cell.points : defaultPts;
-        this.grid[n.r][n.c] = null;
-        hitStar = true;
-      }
-    }
-
-    if (hitStar) {
-      // la bulle tirée disparaît aussi
-      if (this.grid[bestRow][bestCol]) {
-        this.grid[bestRow][bestCol] = null;
-        fallen += 1; // pour le score/feedback
-      }
-    }
-
-    // 5) Tir compté + drop grille
-    this.turnCount++;
-    if (this.turnCount % this.turnsPerDrop === 0) {
-      this.dropGridOneStep();
-    }
-
-    // 6) Win / Lose
-    if (!hasAnyBubble(this.grid, this.rows, this.cols)) {
-      this.isWin = true;
-      this.isOver = true;
-      logInfo("game_over", { outcome: "win", turnCount: this.turnCount });
-    } else if (this.checkGameOverLine()) {
-      this.isOver = true;
-      logInfo("game_over", { outcome: "lose", reason: "danger_line", turnCount: this.turnCount });
-    }
-
-    // 7) Préparer la prochaine bulle
-    this.currentColor = this.nextColor;
-    this.nextColor = this.getRandomColorFromExisting();
-
-    this.updateShooterPositionFromBottomRow();
-    this.bubble = new Bubble(this.startX, this.shooterY, this.radius, this.currentColor);
-
-    return { removed, fallen, starBonus };
+    return attachBubbleToGridFlow(this, collision);
   }
 
   checkGameOverLine() {
