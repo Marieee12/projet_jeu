@@ -4,14 +4,9 @@ import { drawBackground, drawDangerLine, drawGrid } from "./renderer.js";
 import {
   getNeighbors,
   getExistingColors,
-  getConnectedToTop,
-  removeCells,
-  findConnectedSameColor,
-  dropFloatingBubbles,
 } from "./gridLogic.js";
 import { attachBubbleToGridFlow } from "./attachFlow.js";
 import { initGridSpawn, spawnEntitiesOnGrid } from "./spawnLogic.js";
-
 
 export class Game {
   constructor(canvas, ctx, levelConfig) {
@@ -70,7 +65,12 @@ export class Game {
     this.currentColor = this.getRandomColorFromExisting();
     this.nextColor = this.getRandomColorFromExisting();
 
-    this.bubble = new Bubble(this.startX, this.shooterY, this.radius, this.currentColor);
+    this.bubble = new Bubble(
+      this.startX,
+      this.shooterY,
+      this.radius,
+      this.currentColor
+    );
 
     // LOGS
     logInfo("game_init", {
@@ -97,7 +97,6 @@ export class Game {
     spawnEntitiesOnGrid(this, entities);
   }
 
-
   // =========================
   // HELPERS
   // =========================
@@ -109,32 +108,14 @@ export class Game {
     };
   }
 
-  getExistingColors() {
-    const set = new Set();
-    for (let r = 0; r < this.rows; r++) {
-      for (let c = 0; c < this.cols; c++) {
-        const cell = this.grid[r][c];
-        // uniquement les Bubble
-        if (cell instanceof Bubble) set.add(cell.color);
-      }
-    }
-    return set.size ? [...set] : this.colors;
-  }
-
   getRandomColorFromExisting() {
-    const palette = getExistingColors(this.grid, this.rows, this.cols, this.colors);
+    const palette = getExistingColors(
+      this.grid,
+      this.rows,
+      this.cols,
+      this.colors
+    );
     return palette[Math.floor(Math.random() * palette.length)];
-  }
-
-  hasAnyBubble() {
-    for (let r = 0; r < this.rows; r++) {
-      for (let c = 0; c < this.cols; c++) {
-        const cell = this.grid[r][c];
-        // on ne compte que les vraies bulles
-        if (cell instanceof Bubble) return true;
-      }
-    }
-    return false;
   }
 
   // =========================
@@ -154,7 +135,9 @@ export class Game {
     }
 
     const targetRow =
-      bottomRow === null ? this.rows - 1 : Math.min(bottomRow + 1, this.rows - 1);
+      bottomRow === null
+        ? this.rows - 1
+        : Math.min(bottomRow + 1, this.rows - 1);
 
     const centerCanvasX = this.canvas.width / 2;
 
@@ -180,47 +163,17 @@ export class Game {
   // =========================
   // DRAW
   // =========================
-  drawBackground() {
-    const g = this.ctx.createLinearGradient(0, 0, this.canvas.width, this.canvas.height);
-    g.addColorStop(0, "#667eea");
-    g.addColorStop(1, "#764ba2");
-    this.ctx.fillStyle = g;
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-  }
-
-  drawDangerLine() {
-    const y = this.dangerLineY;
-
-    this.ctx.save();
-    this.ctx.beginPath();
-    this.ctx.setLineDash([10, 8]);
-    this.ctx.lineWidth = 3;
-    this.ctx.strokeStyle = "rgba(255,255,255,0.65)";
-    this.ctx.moveTo(0, y);
-    this.ctx.lineTo(this.canvas.width, y);
-    this.ctx.stroke();
-
-    this.ctx.setLineDash([]);
-    this.ctx.font = "12px Montserrat, sans-serif";
-    this.ctx.fillStyle = "rgba(255,255,255,0.75)";
-    this.ctx.fillText("LIMITE", 12, y - 8);
-    this.ctx.restore();
-  }
-
-  drawGrid() {
-    drawGrid(this.ctx, this.grid, this.rows, this.cols, this.radius);
-  }
-
   draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     drawBackground(this.ctx, this.canvas);
     drawGrid(this.ctx, this.grid, this.rows, this.cols, this.radius);
     drawDangerLine(this.ctx, this.canvas, this.dangerLineY);
+
     if (this.bubble) this.bubble.draw(this.ctx);
   }
 
   // =========================
-  // NEIGHBORS 
+  // NEIGHBORS
   // =========================
   getNeighbors(row, col) {
     return getNeighbors(row, col, this.rows, this.cols);
@@ -237,7 +190,6 @@ export class Game {
     let closest = null;
     let bestD2 = Infinity;
 
-    // collision avec une cellule occupée (Bubble / block / star)
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
         const cell = this.grid[row][col];
@@ -256,33 +208,12 @@ export class Game {
 
     if (closest) return closest;
 
-    // plafond
     const topY = this.startY;
     if (this.bubble.y - this.radius <= topY - this.radius / 2) {
       return { type: "ceiling" };
     }
 
     return null;
-  }
-
-  // =========================
-  // MATCH / REMOVE
-  // =========================
-  findConnectedSameColor(startRow, startCol) {
-    return findConnectedSameColor(this.grid, startRow, startCol, this.rows, this.cols);
-  }
-
-  removeCells(cells) {
-    removeCells(this.grid, cells);
-  }
-
-  // bulles connectées au plafond => restent, le reste tombe
-  getConnectedToTop() {
-    return getConnectedToTop(this.grid, this.rows, this.cols);
-  }
-
-  dropFloatingBubbles() {
-    return dropFloatingBubbles(this.grid, this.rows, this.cols);
   }
 
   // =========================
@@ -300,7 +231,6 @@ export class Game {
         const cell = this.grid[r][c];
         if (!cell) continue;
 
-        // si le bas de la cellule touche/passe la ligne -> perdu
         if (cell.y + cell.radius >= limitY) return true;
       }
     }
@@ -317,6 +247,7 @@ export class Game {
       for (let c = 0; c < this.cols; c++) {
         const cell = this.grid[r][c];
         if (!cell) continue;
+
         const center = this.getCellCenter(r, c);
         cell.x = center.x;
         cell.y = center.y;
@@ -328,7 +259,8 @@ export class Game {
   // UPDATE
   // =========================
   update() {
-    if (this.isOver) return { removed: 0, fallen: 0, starBonus: 0 };
+    if (this.isOver)
+      return { removed: 0, fallen: 0, starBonus: 0 };
 
     let removed = 0;
     let fallen = 0;
@@ -337,7 +269,6 @@ export class Game {
     if (this.bubble && (this.bubble.vx !== 0 || this.bubble.vy !== 0)) {
       this.bubble.update();
 
-      // rebonds murs
       if (this.bubble.x - this.radius <= 0) {
         this.bubble.x = this.radius;
         this.bubble.vx *= -1;
@@ -354,7 +285,6 @@ export class Game {
         starBonus = res.starBonus;
       }
 
-      // sécurité
       if (this.bubble && this.bubble.y + this.radius < 0) {
         this.resetBubble();
       }
@@ -371,7 +301,6 @@ export class Game {
     this.bubble.vx = 0;
     this.bubble.vy = 0;
 
-    // reset : current = next, puis reroll next
     this.currentColor = this.nextColor;
     this.nextColor = this.getRandomColorFromExisting();
     this.bubble.color = this.currentColor;
@@ -388,7 +317,6 @@ export class Game {
     this.bubble.vx = Math.cos(angle) * this.shotSpeed;
     this.bubble.vy = Math.sin(angle) * this.shotSpeed;
 
-    // LOGS
     logInfo("shot_fired", {
       turnCount: this.turnCount,
       angle: Math.round(angle * 1000) / 1000,
@@ -400,13 +328,9 @@ export class Game {
   // CHANGER LA COULEUR DE LA BALLE ACTUELLE
   // =========================
   changeCurrentBallColor(newColor) {
-    // Vérifier que la couleur existe dans les couleurs disponibles
     if (!this.colors.includes(newColor)) return;
-
-    // Ne pas changer si la balle est en mouvement
     if (this.bubble && (this.bubble.vx !== 0 || this.bubble.vy !== 0)) return;
 
-    // Changer la couleur de la balle actuelle
     this.currentColor = newColor;
     if (this.bubble) {
       this.bubble.color = newColor;
@@ -423,6 +347,7 @@ export class Game {
     };
   }
 }
+
 
 
 
