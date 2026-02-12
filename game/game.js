@@ -7,6 +7,8 @@ import {
 } from "./gridLogic.js";
 import { attachBubbleToGridFlow } from "./attachFlow.js";
 import { initGridSpawn, spawnEntitiesOnGrid } from "./spawnLogic.js";
+import { checkCollision as checkCollisionLogic } from "./collisionLogic.js";
+
 
 export class Game {
   constructor(canvas, ctx, levelConfig) {
@@ -183,37 +185,7 @@ export class Game {
   // COLLISION
   // =========================
   checkCollision() {
-    if (!this.bubble) return null;
-
-    const maxDist2 = 2 * this.radius * (2 * this.radius);
-
-    let closest = null;
-    let bestD2 = Infinity;
-
-    for (let row = 0; row < this.rows; row++) {
-      for (let col = 0; col < this.cols; col++) {
-        const cell = this.grid[row][col];
-        if (!cell) continue;
-
-        const dx = this.bubble.x - cell.x;
-        const dy = this.bubble.y - cell.y;
-        const d2 = dx * dx + dy * dy;
-
-        if (d2 <= maxDist2 && d2 < bestD2) {
-          bestD2 = d2;
-          closest = { type: "cell", row, col };
-        }
-      }
-    }
-
-    if (closest) return closest;
-
-    const topY = this.startY;
-    if (this.bubble.y - this.radius <= topY - this.radius / 2) {
-      return { type: "ceiling" };
-    }
-
-    return null;
+    return checkCollisionLogic(this);
   }
 
   // =========================
