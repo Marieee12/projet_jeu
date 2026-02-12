@@ -69,7 +69,6 @@ export class Game {
       shotSpeed: this.shotSpeed,
       pattern: this.level?.spawn?.pattern,
     });
-
   }
 
   // =========================
@@ -185,17 +184,16 @@ export class Game {
     return palette[Math.floor(Math.random() * palette.length)];
   }
 
- hasAnyBubble() {
-  for (let r = 0; r < this.rows; r++) {
-    for (let c = 0; c < this.cols; c++) {
-      const cell = this.grid[r][c];
-      // ✅ on ne compte que les vraies bulles
-      if (cell instanceof Bubble) return true;
+  hasAnyBubble() {
+    for (let r = 0; r < this.rows; r++) {
+      for (let c = 0; c < this.cols; c++) {
+        const cell = this.grid[r][c];
+        // ✅ on ne compte que les vraies bulles
+        if (cell instanceof Bubble) return true;
+      }
     }
+    return false;
   }
-  return false;
-}
-
 
   // =========================
   // POSITION CANON
@@ -341,8 +339,22 @@ export class Game {
   getNeighbors(row, col) {
     const isOdd = row % 2 === 1;
     const deltas = isOdd
-      ? [[-1, 0], [-1, 1], [0, -1], [0, 1], [1, 0], [1, 1]]
-      : [[-1, -1], [-1, 0], [0, -1], [0, 1], [1, -1], [1, 0]];
+      ? [
+          [-1, 0],
+          [-1, 1],
+          [0, -1],
+          [0, 1],
+          [1, 0],
+          [1, 1],
+        ]
+      : [
+          [-1, -1],
+          [-1, 0],
+          [0, -1],
+          [0, 1],
+          [1, -1],
+          [1, 0],
+        ];
 
     const out = [];
     for (const [dr, dc] of deltas) {
@@ -359,7 +371,7 @@ export class Game {
   checkCollision() {
     if (!this.bubble) return null;
 
-    const maxDist2 = (2 * this.radius) * (2 * this.radius);
+    const maxDist2 = 2 * this.radius * (2 * this.radius);
 
     let closest = null;
     let bestD2 = Infinity;
@@ -486,6 +498,7 @@ export class Game {
     let bestCol = null;
     let bestD2 = Infinity;
 
+    // 1) Trouver la meilleure case vide
     if (collision.type === "cell") {
       const { row, col } = collision;
 
@@ -541,12 +554,11 @@ export class Game {
       return { removed: 0, fallen: 0, starBonus: 0 };
     }
 
-    // Bonus star : si la case ciblée contient une star (dans une logique future)
-    // (normalement on ne vise que des cases vides, donc bonus star se gère plutôt via voisinage.
-    // Ici : on garde le bonus "minimal" si un jour tu places une star sur une case vide spéciale.)
+    // 2) Placer la bulle sur la grille
     let starBonus = 0;
+    let removed = 0;
+    let fallen = 0;
 
-    // align + place
     const center = this.getCellCenter(bestRow, bestCol);
     this.bubble.x = center.x;
     this.bubble.y = center.y;
@@ -556,51 +568,61 @@ export class Game {
     this.grid[bestRow][bestCol] = this.bubble;
     this.bubble = null;
 
-    // match
+    // 3) Match (>=3) => retire + drop floating (mécanique classique)
     const group = this.findConnectedSameColor(bestRow, bestCol);
-    let removed = 0;
-    let fallen = 0;
 
     if (group.length >= 3) {
       removed = group.length;
       this.removeCells(group);
-      fallen = this.dropFloatingBubbles();
+
+      // seulement après un match
+      fallen += this.dropFloatingBubbles();
     }
 
-    // ⭐ Bonus si on "attrape" une star adjacente (simple)
-    // Si tu veux : une star donne des points quand une bulle est posée à côté
+    // 4) Star : si adjacent, consommer + détruire la bulle posée
+    //  mais on ne déclenche PAS une chute globale ici
+    let hitStar = false;
+
     const neighbors = this.getNeighbors(bestRow, bestCol);
     for (const n of neighbors) {
       const cell = this.grid[n.r][n.c];
       if (cell && cell.type === "star") {
         const defaultPts = this.level?.scoring?.starBonusDefault ?? 500;
         starBonus += typeof cell.points === "number" ? cell.points : defaultPts;
-        // on consomme la star
         this.grid[n.r][n.c] = null;
+        hitStar = true;
       }
     }
 
-    // tir compté
+    if (hitStar) {
+      // ✅ la bulle tirée disparaît aussi
+      if (this.grid[bestRow][bestCol]) {
+        this.grid[bestRow][bestCol] = null;
+        fallen += 1; // optionnel, juste pour le score/feedback
+      }
+
+      // ⚠️ Si tu veux : si la bulle a été supprimée par la star,
+      // on ne doit PAS considérer qu'elle a "fait un match" même si group >= 3.
+      // (sinon elle pourrait supprimer un groupe puis disparaître, à toi de voir)
+    }
+
+    // 5) Tir compté + drop grille
     this.turnCount++;
     if (this.turnCount % this.turnsPerDrop === 0) {
       this.dropGridOneStep();
     }
 
-    // win/lose
+    // 6) Win / Lose
     if (!this.hasAnyBubble()) {
       this.isWin = true;
       this.isOver = true;
-      // LOG
       logInfo("game_over", { outcome: "win", turnCount: this.turnCount });
-
     } else if (this.checkGameOverLine()) {
       this.isOver = true;
-      // LOG
       logInfo("game_over", { outcome: "lose", reason: "danger_line", turnCount: this.turnCount });
-
     }
 
-    // nouvelle bulle : next -> current, puis reroll next
+    // 7) Préparer la prochaine bulle
     this.currentColor = this.nextColor;
     this.nextColor = this.getRandomColorFromExisting();
 
@@ -712,7 +734,6 @@ export class Game {
       angle: Math.round(angle * 1000) / 1000,
       color: this.bubble.color,
     });
-
   }
 
   // =========================
@@ -721,10 +742,10 @@ export class Game {
   changeCurrentBallColor(newColor) {
     // Vérifier que la couleur existe dans les couleurs disponibles
     if (!this.colors.includes(newColor)) return;
-    
+
     // Ne pas changer si la balle est en mouvement
     if (this.bubble && (this.bubble.vx !== 0 || this.bubble.vy !== 0)) return;
-    
+
     // Changer la couleur de la balle actuelle
     this.currentColor = newColor;
     if (this.bubble) {
@@ -738,10 +759,11 @@ export class Game {
   getCurrentColors() {
     return {
       current: this.currentColor,
-      next: this.nextColor
+      next: this.nextColor,
     };
   }
 }
+
 
 
 

@@ -1,6 +1,6 @@
 {
   "id": 3,
-  "name": "Niveau 3 — Obstacles & Bonus",
+  "name": "Niveau 3 - Pression",
   "grid": {
     "rows": 14,
     "cols": 17,
@@ -18,32 +18,11 @@
     ]
   },
   "spawn": {
-    "initialFilledRows": 6,
-    "pattern": "rows_full",
-    "randomFillChance": 1.0
+    "initialFilledRows": 7,
+    "pattern": "random_sparse",
+    "randomFillChance": 0.85
   },
-  "entities": [
-    {
-      "type": "block",
-      "row": 2,
-      "col": 4,
-      "indestructible": true,
-      "shape": "square"
-    },
-    {
-      "type": "block",
-      "row": 2,
-      "col": 5,
-      "indestructible": true,
-      "shape": "square"
-    },
-    {
-      "type": "star",
-      "row": 1,
-      "col": 7,
-      "points": 700
-    }
-  ],
+  "entities": [],
   "winCondition": {
     "type": "clear_all_bubbles"
   },

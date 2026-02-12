@@ -1,4 +1,3 @@
-// ui/dom.js
 export const dom = {
   loaderScreen: document.getElementById("loader-screen"),
   landingPage: document.getElementById("landing-page"),
@@ -18,11 +17,10 @@ export const dom = {
   leaderboardTitle: document.getElementById("leaderboard-title"),
   leaderboardHeader: document.getElementById("leaderboard-header"),
 
-
   // rules modal
   rulesModal: document.getElementById("rules-modal"),
   closeRulesBtn: document.getElementById("close-rules-modal"),
-  startFromModalBtn: document.getElementById("start-from-modal"),
+  restartFromBeginningBtn: document.getElementById("restart-from-beginning"),
 
   // Level intro loader
   levelIntro: document.getElementById("level-intro"),
@@ -34,6 +32,11 @@ export const dom = {
   gameOverModal: document.getElementById("gameover-modal"),
   restartGameBtn: document.getElementById("restart-game"),
   quitGameBtn: document.getElementById("quit-game"),
+  gameOverPlayerEl: document.getElementById("gameover-player"),
+  gameOverScoreEl: document.getElementById("gameover-score"),
+  gameOverTimeEl: document.getElementById("gameover-time"),
+  gameOverRankEl: document.getElementById("gameover-rank"),
+  gameOverLeaderboardBody: document.getElementById("gameover-leaderboard-body"),
 
   // win modal
   winModal: document.getElementById("win-modal"),
