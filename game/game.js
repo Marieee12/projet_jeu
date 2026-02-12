@@ -1,6 +1,17 @@
 import { Bubble } from "./bubble.js";
 import { logInfo } from "../logger.js";
 
+import { drawBackground, drawDangerLine, drawGrid } from "./renderer.js";
+import {
+  getNeighbors,
+  getExistingColors,
+  getConnectedToTop,
+  hasAnyBubble,
+  removeCells,
+  findConnectedSameColor,
+  dropFloatingBubbles,
+} from "./gridLogic.js";
+
 export class Game {
   constructor(canvas, ctx, levelConfig) {
     this.canvas = canvas;
@@ -172,7 +183,7 @@ export class Game {
     for (let r = 0; r < this.rows; r++) {
       for (let c = 0; c < this.cols; c++) {
         const cell = this.grid[r][c];
-        // ⚠️ uniquement les Bubble
+        // uniquement les Bubble
         if (cell instanceof Bubble) set.add(cell.color);
       }
     }
@@ -180,7 +191,7 @@ export class Game {
   }
 
   getRandomColorFromExisting() {
-    const palette = this.getExistingColors();
+    const palette = getExistingColors(this.grid, this.rows, this.cols, this.colors);
     return palette[Math.floor(Math.random() * palette.length)];
   }
 
@@ -188,7 +199,7 @@ export class Game {
     for (let r = 0; r < this.rows; r++) {
       for (let c = 0; c < this.cols; c++) {
         const cell = this.grid[r][c];
-        // ✅ on ne compte que les vraies bulles
+        // on ne compte que les vraies bulles
         if (cell instanceof Bubble) return true;
       }
     }
@@ -265,104 +276,23 @@ export class Game {
     this.ctx.restore();
   }
 
-  drawBlock(block) {
-    const size = this.radius * 1.8;
-    this.ctx.save();
-    this.ctx.fillStyle = "rgba(0,0,0,0.35)";
-    this.ctx.strokeStyle = "rgba(255,255,255,0.7)";
-    this.ctx.lineWidth = 2;
-    this.ctx.beginPath();
-    this.ctx.rect(block.x - size / 2, block.y - size / 2, size, size);
-    this.ctx.fill();
-    this.ctx.stroke();
-    this.ctx.restore();
-  }
-
-  drawStar(star) {
-    this.ctx.save();
-    this.ctx.fillStyle = "rgba(255,215,0,0.9)";
-    this.ctx.strokeStyle = "rgba(255,255,255,0.8)";
-    this.ctx.lineWidth = 2;
-
-    this.ctx.beginPath();
-    this.ctx.arc(star.x, star.y, this.radius * 0.85, 0, Math.PI * 2);
-    this.ctx.fill();
-    this.ctx.stroke();
-
-    this.ctx.fillStyle = "#111";
-    this.ctx.font = "16px Montserrat, sans-serif";
-    this.ctx.textAlign = "center";
-    this.ctx.textBaseline = "middle";
-    this.ctx.fillText("★", star.x, star.y + 1);
-
-    this.ctx.restore();
-  }
-
   drawGrid() {
-    for (let r = 0; r < this.rows; r++) {
-      for (let c = 0; c < this.cols; c++) {
-        const cell = this.grid[r][c];
-        if (!cell) continue;
-
-        // Bubble classique
-        if (cell instanceof Bubble) {
-          cell.draw(this.ctx);
-          continue;
-        }
-
-        // Block
-        if (cell.type === "block") {
-          this.drawBlock(cell);
-          continue;
-        }
-
-        // Star
-        if (cell.type === "star") {
-          this.drawStar(cell);
-          continue;
-        }
-      }
-    }
+    drawGrid(this.ctx, this.grid, this.rows, this.cols, this.radius);
   }
 
   draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.drawBackground();
-    this.drawGrid();
-    this.drawDangerLine();
+    drawBackground(this.ctx, this.canvas);
+    drawGrid(this.ctx, this.grid, this.rows, this.cols, this.radius);
+    drawDangerLine(this.ctx, this.canvas, this.dangerLineY);
     if (this.bubble) this.bubble.draw(this.ctx);
   }
 
   // =========================
-  // NEIGHBORS (hex)
+  // NEIGHBORS 
   // =========================
   getNeighbors(row, col) {
-    const isOdd = row % 2 === 1;
-    const deltas = isOdd
-      ? [
-          [-1, 0],
-          [-1, 1],
-          [0, -1],
-          [0, 1],
-          [1, 0],
-          [1, 1],
-        ]
-      : [
-          [-1, -1],
-          [-1, 0],
-          [0, -1],
-          [0, 1],
-          [1, -1],
-          [1, 0],
-        ];
-
-    const out = [];
-    for (const [dr, dc] of deltas) {
-      const r = row + dr;
-      const c = col + dc;
-      if (r >= 0 && r < this.rows && c >= 0 && c < this.cols) out.push({ r, c });
-    }
-    return out;
+    return getNeighbors(row, col, this.rows, this.cols);
   }
 
   // =========================
@@ -408,81 +338,20 @@ export class Game {
   // MATCH / REMOVE
   // =========================
   findConnectedSameColor(startRow, startCol) {
-    const start = this.grid[startRow][startCol];
-    if (!(start instanceof Bubble)) return [];
-
-    const color = start.color;
-    const stack = [{ r: startRow, c: startCol }];
-    const visited = new Set();
-    const group = [];
-
-    while (stack.length) {
-      const { r, c } = stack.pop();
-      const key = `${r},${c}`;
-      if (visited.has(key)) continue;
-      visited.add(key);
-
-      const b = this.grid[r][c];
-      if (!(b instanceof Bubble)) continue;
-      if (b.color !== color) continue;
-
-      group.push({ r, c });
-
-      for (const n of this.getNeighbors(r, c)) {
-        const nb = this.grid[n.r][n.c];
-        if (nb instanceof Bubble && nb.color === color) stack.push(n);
-      }
-    }
-
-    return group;
+    return findConnectedSameColor(this.grid, startRow, startCol, this.rows, this.cols);
   }
 
   removeCells(cells) {
-    for (const { r, c } of cells) this.grid[r][c] = null;
+    removeCells(this.grid, cells);
   }
 
   // bulles connectées au plafond => restent, le reste tombe
   getConnectedToTop() {
-    const stack = [];
-    const visited = new Set();
-
-    for (let c = 0; c < this.cols; c++) {
-      if (this.grid[0][c]) stack.push({ r: 0, c });
-    }
-
-    while (stack.length) {
-      const { r, c } = stack.pop();
-      const key = `${r},${c}`;
-      if (visited.has(key)) continue;
-      visited.add(key);
-
-      for (const n of this.getNeighbors(r, c)) {
-        if (this.grid[n.r][n.c]) stack.push(n); // bubble OU entity
-      }
-    }
-
-    return visited;
+    return getConnectedToTop(this.grid, this.rows, this.cols);
   }
 
   dropFloatingBubbles() {
-    const connected = this.getConnectedToTop();
-    const floating = [];
-
-    for (let r = 0; r < this.rows; r++) {
-      for (let c = 0; c < this.cols; c++) {
-        const cell = this.grid[r][c];
-        if (!cell) continue;
-
-        const key = `${r},${c}`;
-        if (connected.has(key)) continue;
-
-        // ⚠️ on ne fait tomber QUE les Bubble, pas les blocks/stars
-        if (cell instanceof Bubble) floating.push({ r, c });
-      }
-    }
-
-    if (floating.length) this.removeCells(floating);
-    return floating.length;
+    return dropFloatingBubbles(this.grid, this.rows, this.cols);
   }
 
   // =========================
@@ -498,55 +367,56 @@ export class Game {
     let bestCol = null;
     let bestD2 = Infinity;
 
-    // 1) Trouver la meilleure case vide
-    if (collision.type === "cell") {
-      const { row, col } = collision;
+    let starBonus = 0;
+    let removed = 0;
+    let fallen = 0;
 
-      for (const { r, c } of this.getNeighbors(row, col)) {
+    const dist2 = (x1, y1, x2, y2) => {
+      const dx = x1 - x2;
+      const dy = y1 - y2;
+      return dx * dx + dy * dy;
+    };
+
+    const tryCells = (cells) => {
+      for (const { r, c } of cells) {
         if (this.grid[r][c] !== null) continue;
         const center = this.getCellCenter(r, c);
-        const dx = bx - center.x;
-        const dy = by - center.y;
-        const d2 = dx * dx + dy * dy;
+        const d2 = dist2(bx, by, center.x, center.y);
         if (d2 < bestD2) {
           bestD2 = d2;
           bestRow = r;
           bestCol = c;
         }
       }
+    };
+
+    // 1) Trouver la meilleure case vide
+    if (collision.type === "cell") {
+      const { row, col } = collision;
+      tryCells(this.getNeighbors(row, col));
     } else {
       // plafond => ligne 0
       const row = 0;
+      const candidates = [];
       for (let c = 0; c < this.cols; c++) {
-        if (this.grid[row][c] !== null) continue;
-        const center = this.getCellCenter(row, c);
-        const dx = bx - center.x;
-        const dy = by - center.y;
-        const d2 = dx * dx + dy * dy;
-        if (d2 < bestD2) {
-          bestD2 = d2;
-          bestRow = row;
-          bestCol = c;
+        if (this.grid[row][c] === null) {
+          candidates.push({ r: row, c });
         }
       }
+      tryCells(candidates);
     }
 
     // fallback : plus proche case vide globale
     if (bestRow === null || bestCol === null) {
+      const allEmpty = [];
       for (let r = 0; r < this.rows; r++) {
         for (let c = 0; c < this.cols; c++) {
-          if (this.grid[r][c] !== null) continue;
-          const center = this.getCellCenter(r, c);
-          const dx = bx - center.x;
-          const dy = by - center.y;
-          const d2 = dx * dx + dy * dy;
-          if (d2 < bestD2) {
-            bestD2 = d2;
-            bestRow = r;
-            bestCol = c;
+          if (this.grid[r][c] === null) {
+            allEmpty.push({ r, c });
           }
         }
       }
+      tryCells(allEmpty);
     }
 
     if (bestRow === null || bestCol === null) {
@@ -555,10 +425,6 @@ export class Game {
     }
 
     // 2) Placer la bulle sur la grille
-    let starBonus = 0;
-    let removed = 0;
-    let fallen = 0;
-
     const center = this.getCellCenter(bestRow, bestCol);
     this.bubble.x = center.x;
     this.bubble.y = center.y;
@@ -595,15 +461,11 @@ export class Game {
     }
 
     if (hitStar) {
-      // ✅ la bulle tirée disparaît aussi
+      // la bulle tirée disparaît aussi
       if (this.grid[bestRow][bestCol]) {
         this.grid[bestRow][bestCol] = null;
-        fallen += 1; // optionnel, juste pour le score/feedback
+        fallen += 1; // pour le score/feedback
       }
-
-      // ⚠️ Si tu veux : si la bulle a été supprimée par la star,
-      // on ne doit PAS considérer qu'elle a "fait un match" même si group >= 3.
-      // (sinon elle pourrait supprimer un groupe puis disparaître, à toi de voir)
     }
 
     // 5) Tir compté + drop grille
@@ -613,7 +475,7 @@ export class Game {
     }
 
     // 6) Win / Lose
-    if (!this.hasAnyBubble()) {
+    if (!hasAnyBubble(this.grid, this.rows, this.cols)) {
       this.isWin = true;
       this.isOver = true;
       logInfo("game_over", { outcome: "win", turnCount: this.turnCount });
@@ -763,6 +625,7 @@ export class Game {
     };
   }
 }
+
 
 
 
