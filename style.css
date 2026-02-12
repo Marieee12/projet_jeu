@@ -607,11 +607,6 @@ body {
     padding: 0;
 }
 
-/* #gameCanvas {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    display: block;
-    border-radius: 0;
-} */
 
 #aim-indicator {
     position: absolute;
