@@ -26,7 +26,12 @@ app.post("/log", (req, res) => {
 // Static file
 app.use(express.static(__dirname));
 
-// SPA fallback
+// Root: loader page (shows a short splash before index)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'loader.html'));
+});
+
+// SPA fallback (any other route -> index)
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });

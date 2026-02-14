@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bubble Shooter — Chargement</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { background: var(--bg, #0f2b4a); }
+    .loader-page { height: 100vh; display:flex; align-items:center; justify-content:center; }
+    .loader-card { width: min(760px, 92%); max-width:900px; padding:40px; box-sizing:border-box; border-radius:20px; text-align:center; }
+    .loader-title { font-family: 'Montserrat', sans-serif; color:var(--color-accent); font-size:2.4rem; margin:0 0 8px; }
+    .bubble-loader { display:flex; gap:8px; justify-content:center; margin:18px 0 12px; }
+    .bubble-item { width:18px; height:18px; border-radius:50%; background: #ff6b81; opacity:0.6; animation: bubbleMove 1s infinite ease-in-out; }
+    .bubble-1 { animation-delay: 0s; }
+    .bubble-2 { animation-delay: 0.12s; background:#f76c6c; }
+    .bubble-3 { animation-delay: 0.24s; background:#ff9a76; }
+    .bubble-4 { animation-delay: 0.36s; background:#ffd166; }
+    @keyframes bubbleMove { 0%,100%{ transform:translateY(0); opacity:0.6 } 50%{ transform:translateY(-12px); opacity:1 } }
+    .loader-progress { width:100%; height:8px; background:rgba(255,255,255,0.06); border-radius:999px; overflow:hidden; margin-top:12px; }
+    .loader-progress > i { display:block; height:100%; width:0%; background:linear-gradient(90deg,#ff758c,#ffd166); transition:width 0.2s linear; }
+    .loader-sub { color:rgba(255,255,255,0.8); margin-top:14px; }
+  </style>
+</head>
+<body>
+  <div class="loader-page">
+    <div class="panel loader-card">
+      <h1 class="loader-title"><i class="fa-solid fa-burst"></i> Bubble Shooter</h1>
+      <div class="bubble-loader" aria-hidden>
+        <div class="bubble-item bubble-1"></div>
+        <div class="bubble-item bubble-2"></div>
+        <div class="bubble-item bubble-3"></div>
+        <div class="bubble-item bubble-4"></div>
+      </div>
+      <div class="loader-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+        <i id="loader-bar"></i>
+      </div>
+      <div class="loader-sub">Chargement en cours — la page s'ouvrira automatiquement</div>
+    </div>
+  </div>
+
+  <script>
+    const MIN_DISPLAY = 3000;
+    const start = Date.now();
+
+    const bar = document.getElementById('loader-bar');
+    let pct = 0;
+    const t = setInterval(() => {
+      pct = Math.min(100, pct + Math.random() * 12);
+      bar.style.width = pct + '%';
+      if (pct >= 100) clearInterval(t);
+    }, 200);
+
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.href = '/index.html';
+    document.head.appendChild(link);
+
+    function done() {
+      const elapsed = Date.now() - start;
+      const wait = Math.max(0, MIN_DISPLAY - elapsed);
+      setTimeout(() => {
+        window.location.href = '/index.html';
+      }, wait);
+    }
+    done();
+  </script>
+</body>
+</html>

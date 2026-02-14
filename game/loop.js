@@ -104,7 +104,7 @@ export function createGameController(dom, modals) {
     await startLevel(levelId, { showIntro, resetStats: true });
   }
 
-  function update() {
+  async function update() {
     if (!running || !game) return;
 
     // update logique du jeu
@@ -130,6 +130,8 @@ export function createGameController(dom, modals) {
       if (game.isWin) {
         // Win niveau 1/2/3 => niveau suivant
         if (hasNextLevel()) {
+          // play a short celebration animation, then go to next level
+          await modals?.playLevelCompleteAnimation?.();
           goToNextLevel();
           return;
         }

@@ -130,10 +130,34 @@ export function bindModals(dom, callbacks) {
 
   dom.winModal?.querySelector(".modal-overlay")?.addEventListener("click", closeWinModal);
 
+  // --- Level complete animation (used between levels)
+  async function playLevelCompleteAnimation({ levelName } = {}) {
+    return new Promise((resolve) => {
+      const overlay = dom.levelCompleteOverlay;
+      if (!overlay) return resolve();
+
+      overlay.classList.remove('hidden');
+      // small delay to allow CSS transitions
+      requestAnimationFrame(() => overlay.classList.add('show'));
+
+      // hide after animation duration
+      const TOTAL = 1400; // ms
+      setTimeout(() => {
+        overlay.classList.remove('show');
+        // allow transition to finish before hiding
+        setTimeout(() => {
+          overlay.classList.add('hidden');
+          resolve();
+        }, 260);
+      }, TOTAL);
+    });
+  }
+
   return {
     openGameOverModal,
     openWinModal,
     closeRulesModal,
+    playLevelCompleteAnimation,
   };
 }
 

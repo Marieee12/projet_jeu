@@ -48,6 +48,9 @@ export const dom = {
   winRestartBtn: document.getElementById("win-restart"),
   winQuitBtn: document.getElementById("win-quit"),
 
+  // level complete overlay
+  levelCompleteOverlay: document.getElementById("level-complete-overlay"),
+
   // player UI
   playerInput: document.getElementById("player-input"),
   playerSave: document.getElementById("player-save"),
